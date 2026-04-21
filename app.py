@@ -27,9 +27,9 @@ class DataBase:
         try:
             self.conn = sql.connect("inventory.db")
             self.cursor = self.conn.cursor()
-            self.instruction = f"INSERT INTO inventory VALUES('{name}')"ñ
+            self.instruction = f"INSERT INTO inventory VALUES('{name}')"
           
-            self.cursor.execute()
+            self.cursor.execute(self.instruction) # Critical vulnerability: SQL Inyection
 
 if __name__ == '__main__':
     pass

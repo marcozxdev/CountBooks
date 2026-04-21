@@ -30,6 +30,8 @@ class DataBase:
             self.instruction = f"INSERT INTO inventory VALUES('{name}')"
           
             self.cursor.execute(self.instruction) # Critical vulnerability: SQL Inyection
-
+        finally:
+            self.conn.commit()
+            self.conn.close()
 if __name__ == '__main__':
     pass

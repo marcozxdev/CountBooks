@@ -25,18 +25,25 @@ class DataBase:
 
     def debug_characters(self, value):
         FORBIDDEN_CHARACTERS = ["-", ";", "_", "(", ")", "+", "'"]
+        self.danger = False
 
         for i in value:
-            if i == FORBIDDEN_CHARACTERS:
-                pass
+            for j in FORBIDDEN_CHARACTERS:
+                if i == j:
+                    self.danger = True
     
-    def insert_data(self):
+    def insert_data(self, name):
         try:
             self.conn = sql.connect("inventory.db")
             self.cursor = self.conn.cursor()
             self.instruction = f"INSERT INTO inventory VALUES('{name}')"
-          
-            self.cursor.execute(self.instruction) # Critical vulnerability: SQL Inyection
+
+            self.debug_characters(name)
+            
+            if self.danger:
+                return "Por favor solo ingrese letras y números. No se permiten carácteres especiales."
+            else:
+                self.cursor.execute(self.instruction) # Critical vulnerability: SQL Inyection
         finally:
             self.conn.commit()
             self.conn.close()

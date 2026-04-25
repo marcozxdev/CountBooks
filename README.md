@@ -42,6 +42,5 @@ pip install -r requirements.txt
 ```python
 pip install -r requirements.txt
 ```
-
-## 
-## Listo ya puedes usar las librerias necesarias para desarrollar y probar el programa
+[!NOTE]
+> Listo ya puedes usar las librerias necesarias para desarrollar y probar el programa

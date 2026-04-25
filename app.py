@@ -24,7 +24,7 @@ class DataBase:
             self.conn.close()
 
     def debug_characters(self, value):
-        FORBIDDEN_CHARACTERS = ["-", ";", "_", "(", ")", "+", "'"]
+        FORBIDDEN_CHARACTERS = ("-", ";", "_", "(", ")", "+", "'")
         self.danger = False
 
         for i in value:

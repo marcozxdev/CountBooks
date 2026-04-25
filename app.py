@@ -23,6 +23,13 @@ class DataBase:
             self.conn.commit()
             self.conn.close()
 
+    def debug_characters(self, value):
+        FORBIDDEN_CHARACTERS = ["-", ";", "_", "(", ")", "+", "'"]
+
+        for i in value:
+            if i == FORBIDDEN_CHARACTERS:
+                pass
+    
     def insert_data(self):
         try:
             self.conn = sql.connect("inventory.db")

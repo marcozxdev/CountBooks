@@ -1,12 +1,14 @@
 # CountBooks
 CountBooks: gestionador de inventarios de bibliotecas, inventario de libros,  a quien se le prestan los libros  la info entre otras muy buenas utilidades  
 
-# instalacion para desarrolladores 
+# Instalación para desarrolladores 
 
-## 1. crear un entorno virtual de desarrollo
+## 1. Crear un entorno virtual de desarrollo
 
-### NOTA: debe estar dentro de la carpeta de CountBooks
-### linux / MacOS
+> [!NOTE]
+> Debe estar dentro de la carpeta de CountBooks
+
+### Linux / MacOS
 ```python
 python3 -m venv venv
 ```

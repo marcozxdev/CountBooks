@@ -6,7 +6,7 @@ CountBooks: gestionador de inventarios de bibliotecas, inventario de libros,  a 
 ## 1. crear un entorno virtual de desarrollo
 
 ### NOTA: debe estar dentro de la carpeta de CountBooks
-### linux / mac os
+### linux / MacOS
 ```python
 python3 -m venv venv
 ```
@@ -17,9 +17,9 @@ python -m venv venv
 ```
 
 
-## 2. activar env
+## 2. Activar env
 ### NOTA: debe estar dentro de la carpeta de CountBooks
-### linux / mac os
+### linux / MacOS
 ```python
 source venv/bin/activate
 ```
@@ -32,7 +32,7 @@ venv\Scripts\activate
 ## 3. instalar dependencias para el desarrollo
 ### NOTA: debe estar dentro de la carpeta de CountBooks
 
-### linux / mac os
+### linux / MacOS
 ```python
 pip install -r requirements.txt
 
@@ -42,6 +42,5 @@ pip install -r requirements.txt
 ```python
 pip install -r requirements.txt
 ```
-
-## 
-## Listo ya puedes usar las librerias necesarias para desarrollar y probar el programa
+> [!NOTE]
+> Listo ya puedes usar las librerias necesarias para desarrollar y probar el programa

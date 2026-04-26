@@ -20,13 +20,6 @@ class Database:
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
-        """
-        Se deben liberar los recursos.
-            self.conn.commit()
-            self.conn.close()
-        Además se necesitan manejos de excepciones, usando finally para garantizar que los recursos siempre se liberarán.
-        """
-
     # -------------------------
     # Métodos básicos
     # -------------------------

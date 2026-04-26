@@ -16,6 +16,17 @@ class Database:
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
+    """
+    def debug_characters(self, value):
+        FORBIDDEN_CHARACTERS = ("-", ";", "_", "(", ")", "+", "'")
+        self.danger = False
+
+        for i in value:
+            for j in FORBIDDEN_CHARACTERS:
+                if i == j:
+                    self.danger = True
+    """
+    
     # -------------------------
     # Métodos básicos
     # -------------------------

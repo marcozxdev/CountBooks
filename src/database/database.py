@@ -1,17 +1,13 @@
-from pathlib import Path
-import sqlite3
+from pathlib import Path # Importamos la librería pathlib
+import sqlite3 #Importamos la librería sqlite3 y la renombramos con "as" para personalizar el nombre a uno más corto y cómodo.
+
+def get_db_path(): # Declaramos una función llamada "get_db_path" para obtener la ruta en dónde nuestra base de datos (DB) se almacenará. 
+    app_dir = Path.home() / ".books" # Declaramos una variable llamada "app_dir" para almacenar el objeto "home" del submódulo "Path".
+    app_dir.mkdir(exist_ok=True) # Accedemos al método mkdir del objeto home para crear directorios.
+    return app_dir / "books.db" # Retornamos la variable app_dir dividida por el string "books.db" que será la BBDD (Base de datos)
 
 
-
-
-
-def get_db_path():
-    app_dir = Path.home() / ".books"
-    app_dir.mkdir(exist_ok=True)
-    return app_dir / "books.db"
-
-
-DB_PATH = get_db_path()
+DB_PATH = get_db_path() # Definimos una variable con nomenclatura de constante llamada "DB_PATH" para guardar el valor de retorno al llamar a la función "get_db_path" y obtener la ruta dónde gestionaremos la ubicación de nuestra BBDD (Base de datos).
 
 
 class Database:
@@ -20,14 +16,31 @@ class Database:
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
 
-    # -------------------------
-    # Métodos básicos
-    # -------------------------
+    def debug_characters(self, value):
+        FORBIDDEN_CHARACTERS = ("-", ";", "_", "(", ")", "+", "'")
+        self.danger = False
+
+        for i in value:
+            for j in FORBIDDEN_CHARACTERS:
+                if i == j:
+                    self.danger = True
+    
+    # ==========================
+    #     Métodos Básicos
+    # ==========================
 
     def execute(self, query, params=None):
         if params is None:
             params = ()
-        self.cursor.execute(query, params)
+
+        self.debug_characters(query)
+
+        if self.danger:
+            print("El usuario está ingresando carácteres especiales en el campo.")
+
+            raise ValueError("Protect DB: No se permiten carácteres especiales.") # Se debe manejar la excepción o si no la app colapsará
+        else:
+            self.cursor.execute(query, params)
 
 
     def fetchone(self):
@@ -46,12 +59,12 @@ class Database:
         self.conn.close()
 
 
-# estructura de la base de datos donde se define sus relaciones y sus camps 
+# Estructura de la base de datos donde se define sus relaciones y sus camps 
 
 def estructure_db(database: Database):
     cursor = database.cursor
 
-    # estructura de la tabla 
+    # Usuarios
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS libros (
         id INTEGER PRIMARY KEY,
@@ -73,9 +86,9 @@ def estructure_db(database: Database):
     database.commit()
 
 
-# -------------------------
-# Inicialización automática
-# -------------------------
+# =========================
+# Inicialización Automática
+# =========================
 def init_db():
     if not DB_PATH.exists():
         DB_PATH.touch()
@@ -85,7 +98,7 @@ def init_db():
     return db
 
 
-# instancia lista para usar
+# Instancia lista para usar
 db = init_db()
 
 # print(get_db_path())

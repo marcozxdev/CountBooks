@@ -51,7 +51,7 @@ class Database:
 def estructure_db(database: Database):
     cursor = database.cursor
 
-    # usuarios
+    # estructura de la tabla 
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS libros (
         id INTEGER PRIMARY KEY,

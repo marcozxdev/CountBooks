@@ -113,7 +113,7 @@
 <aside class="fixed left-0 top-0 h-full w-64 border-r border-[#E8E4D9] bg-slate-50 flex flex-col py-8 z-50">
 <div class="px-8 mb-12">
 <h1 class="font-serif text-2xl font-bold text-blue-950">CountBooks</h1>
-<p class="text-slate-500 font-serif text-sm italic tracking-tight">Academic Inventory</p>
+<p class="text-slate-500 font-serif text-sm italic tracking-tight">Library Inventory</p>
 </div>
 <nav class="flex flex-col space-y-1">
 <!-- Active State: Collection -->
@@ -126,15 +126,13 @@
 <a class="text-slate-600 pl-5 py-3 font-serif text-lg tracking-tight hover:text-blue-800 hover:bg-[#E8E4D9]/30 transition-colors duration-150 ease-in-out" href="#">
                 Data Manager
             </a>
-<a class="text-slate-600 pl-5 py-3 font-serif text-lg tracking-tight hover:text-blue-800 hover:bg-[#E8E4D9]/30 transition-colors duration-150 ease-in-out" href="#">
-                Archive Settings
-            </a>
+
 </nav>
 </aside>
 <!-- TopAppBar Shell -->
 <header class="flex justify-end items-center h-16 ml-64 px-8 w-[calc(100%-16rem)] bg-white border-b border-[#E8E4D9] fixed top-0 z-40">
 <div class="w-72 relative">
-<input class="w-full bg-[#f4f3f2] border border-[#74777d]/30 px-4 py-1.5 font-metadata text-metadata rounded-sm focus:border-primary focus:ring-0 transition-all duration-200" placeholder="Search archive..." type="text"/>
+<input class="w-full bg-[#f4f3f2] border border-[#74777d]/30 px-4 py-1.5 font-metadata text-metadata rounded-sm focus:border-primary focus:ring-0 transition-all duration-200" placeholder="Buscar libro..." type="text"/>
 </div>
 </header>
 <!-- Main Content Canvas -->
@@ -175,7 +173,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-05213</td>
 <td class="px-4 py-4">SEC-A1-42</td>
 <td class="px-4 py-4">3</td>
-<td class="px-4 py-4"><span class="text-green-700 font-bold">• Available</span></td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
 <td class="px-4 py-4">Immanuel Kant</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -187,7 +185,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-08817</td>
 <td class="px-4 py-4">ART-G5-12</td>
 <td class="px-4 py-4">1</td>
-<td class="px-4 py-4"><span class="text-secondary font-bold">• Rare</span></td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
 <td class="px-4 py-4">Robert Bringhurst</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -199,7 +197,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-07432</td>
 <td class="px-4 py-4">FIC-C3-02</td>
 <td class="px-4 py-4">12</td>
-<td class="px-4 py-4"><span class="text-green-700 font-bold">• Available</span></td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
 <td class="px-4 py-4">F. Scott Fitzgerald</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -211,7 +209,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-02625</td>
 <td class="px-4 py-4">TEC-M1-88</td>
 <td class="px-4 py-4">5</td>
-<td class="px-4 py-4"><span class="text-error font-bold">• Loaned</span></td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
 <td class="px-4 py-4">Abelson &amp; Sussman</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -223,7 +221,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-16038</td>
 <td class="px-4 py-4">LOG-R2-09</td>
 <td class="px-4 py-4">2</td>
-<td class="px-4 py-4"><span class="text-secondary font-bold">• Restricted</span></td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
 <td class="px-4 py-4">Russell &amp; Whitehead</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -235,7 +233,7 @@
 <td class="px-4 py-4 font-mono text-xs">ISBN-978-18402</td>
 <td class="px-4 py-4">FIC-J2-11</td>
 <td class="px-4 py-4">1</td>
-<td class="px-4 py-4"><span class="text-secondary font-bold">• Rare</span></td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
 <td class="px-4 py-4">James Joyce</td>
 <td class="px-4 py-4">No</td>
 </tr>
@@ -257,26 +255,14 @@
 </div>
 <!-- System Stats / Bento Grid Secondary Info -->
 <div class="grid grid-cols-4 gap-6 mt-8">
-<div class="parchment-border bg-white p-6">
-<h4 class="font-ui-label-bold text-xs uppercase tracking-widest text-secondary mb-2">Ingresos Mes</h4>
-<p class="font-book-title-lg text-primary leading-none">124</p>
-<p class="text-xs text-on-surface-variant mt-2 italic">+12% vs periodo anterior</p>
-</div>
-<div class="parchment-border bg-white p-6">
+
+<div class="parchment-border bg-white p-8">
 <h4 class="font-ui-label-bold text-xs uppercase tracking-widest text-secondary mb-2">Préstamos Activos</h4>
 <p class="font-book-title-lg text-primary leading-none">38</p>
 <p class="text-xs text-on-surface-variant mt-2 italic">Tasa de retorno 94%</p>
 </div>
-<div class="parchment-border bg-white p-6">
-<h4 class="font-ui-label-bold text-xs uppercase tracking-widest text-secondary mb-2">Categoría Líder</h4>
-<p class="font-book-title-lg text-primary leading-none">Ciencias</p>
-<p class="text-xs text-on-surface-variant mt-2 italic">842 volúmenes totales</p>
-</div>
-<div class="parchment-border bg-white p-6">
-<h4 class="font-ui-label-bold text-xs uppercase tracking-widest text-secondary mb-2">Estado Sistema</h4>
-<p class="font-book-title-lg text-green-700 leading-none">Óptimo</p>
-<p class="text-xs text-on-surface-variant mt-2 italic">Sincronización finalizada</p>
-</div>
+
+
 </div>
 </main>
 </body></html>

@@ -1,7 +1,20 @@
 
 
 class BookModel:
-    def __init__(self, titulo: str, categoria: str, editorial: str, codigo: str, referencia: str, cantidad: int, estado: str, autor: str, prestado: str, donado: str, fecha: str):
+    def __init__(
+        self,
+        titulo: str="", 
+        categoria: str="",
+        editorial: str="",
+        codigo: str="", 
+        referencia: str="", 
+        cantidad: int=1, 
+        estado: str="BUENO", 
+        autor: str="", 
+        prestado: str="NO", 
+        donado: str="NO", 
+        fecha: str=""
+        ):
 
         self.titulo = titulo
         self.categoria = categoria

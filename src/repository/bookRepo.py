@@ -1,6 +1,10 @@
 from src.database.database import Database
 from models.bookModel import BookModel
 from src.repository.sqlite import Sqlite
+
+
+
+
 class BookRepo:
     def __init__(self, db: Database):
         self.db = db
@@ -36,9 +40,9 @@ class BookRepo:
     
     def add_book(self, book: BookModel):
         self.db.execute("""
-            INSERT INTO libros INSERT INTO libros (titulo, categoria, editorial, codigo, referencia, cantidad, estado, autor, prestado, donado, fecha) VALUES
+            INSERT INTO libros INSERT INTO libros (titulo, categoria, editorial, codigo_ref, codigo_isbn referencia, cantidad, estado, autor, prestado, donado, fecha) VALUES
             (?,?,?,?,?,?,?,?,?,?,?)
-            """, (book.titulo, book.categoria, book.editorial, book.codigo, book.referencia, book.cantidad, book.estado, book.autor,  book.prestado, book.donado, book.fecha))
+            """, (book.titulo, book.categoria, book.editorial, book.codigo_ref, book.codigo_isbn, book.referencia, book.cantidad, book.estado, book.autor,  book.prestado, book.donado, book.fecha))
 
     
     def add_books(self, books):

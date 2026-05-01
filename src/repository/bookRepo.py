@@ -1,5 +1,5 @@
 from src.database.database import Database
-from models.bookModel import BookModel
+from src.models.bookModel import BookModel
 from src.repository.sqlite import Sqlite
 
 
@@ -25,12 +25,13 @@ class BookRepo:
             WHERE       titulo  like ? OR
                         categoria like ? OR
                         editorial  like ? OR
-                        codigo like ? OR
+                        codigo_ref like ? OR
+                        codigo_isbn like ? OR
                         referencia like ? OR
                         estado like ? OR
                         autor like ? 
             LIMIT ?;
-            """,(book, book, book, book, book, book, book, limit))
+            """,(book, book, book, book, book, book, book, book, limit))
             return self.db.fetchall()
 
 
@@ -40,8 +41,8 @@ class BookRepo:
     
     def add_book(self, book: BookModel):
         self.db.execute("""
-            INSERT INTO libros INSERT INTO libros (titulo, categoria, editorial, codigo_ref, codigo_isbn referencia, cantidad, estado, autor, prestado, donado, fecha) VALUES
-            (?,?,?,?,?,?,?,?,?,?,?)
+            INSERT INTO libros (titulo, categoria, editorial, codigo_ref, codigo_isbn, referencia, cantidad, estado, autor, prestado, donado, fecha) VALUES
+            (?,?,?,?,?,?,?,?,?,?,?,?)
             """, (book.titulo, book.categoria, book.editorial, book.codigo_ref, book.codigo_isbn, book.referencia, book.cantidad, book.estado, book.autor,  book.prestado, book.donado, book.fecha))
 
     
@@ -61,5 +62,5 @@ class BookRepo:
 
 #### apartado de tests
 
-query = BookRepo(Sqlite())
-print(query.search_book("cien"))
+# query = BookRepo(Sqlite())
+# print(query.search_book("cien"))

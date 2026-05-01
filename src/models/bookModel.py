@@ -29,7 +29,7 @@ class BookModel:
         self.prestado = prestado
         self.donado = donado
         self.fecha = fecha
-        self.id: int
+        self.id: int = None
 
     def a_book(self):
         book = {"titulo": self.titulo, "categoria": self.categoria, "editorial": self.editorial,

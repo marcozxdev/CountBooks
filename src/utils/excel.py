@@ -5,7 +5,7 @@ from src.models.bookModel import BookModel
 
 # nombres del Excel de la biblioteca -> nombres del modelo
 MAPEO_COLUMNAS = {
-    "COLECCIÓN DE REFERENCIA"          : "titulo",
+    "COLECCION DE REFERENCIA"          : "titulo",
     "CARACTERISTICAS DE LA REFERENCIA" : "categoria",
     "EDITORIAL"                        : "editorial",
     "CODIGO"                           : "codigo_ref",
@@ -27,7 +27,7 @@ COLUMNAS_DB = [
 
 # requeridas según el tipo de Excel
 COLUMNAS_REQUERIDAS = [
-    "COLECCIÓN DE REFERENCIA", "CANTIDAD", "AUTOR"
+    "COLECCION DE REFERENCIA", "CANTIDAD", "AUTOR"
 ]
 
 COLUMNAS_REQUERIDAS_DB = [
@@ -158,3 +158,9 @@ def exportar_excel(libros: list, ruta: str) -> None:
 
 # df = pd.read_excel("docs/INVENTARIO GAB - 2023.xlsx")
 # print(df.columns.tolist())  # imprime los nombres exactos de las columnas
+
+book: BookModel
+data =  leer_excel("docs/INVENTARIO GAB - 2023.xlsx")
+
+    
+print(data[100].a_book())

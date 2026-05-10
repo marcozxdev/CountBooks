@@ -1,9 +1,9 @@
-from fastapi import FastAPI
-from fastapi import HTMLResponse
-from fastapi import HTTPException
-from fastapi.middleware.cors import CORSMiddleware
-from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
-from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
+from fastapi import FastAPI # Importamos la librería FastAPI para diseñar APIs y servidores backend
+from fastapi import HTMLResponse # De la librería FastAPI importamos HTMLResponse para dar respuestas en HTML
+from fastapi import HTTPException # De la librería FastAPI importamos HTTPException para lanzar excepciones y proporcionar información al usuario acerca del error
+from fastapi.middleware.cors import CORSMiddleware # De la librería FastAPI importamos CORSMiddleware para agregarlo al middleware de la app
+from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND # De la librería starlette importamos HTTP_403_FORBIDDEN y HTTP_404_NOT_FOUND para prohibir el acesso al un usuario en específico e informar si una URL, endpoint o dato no existe o no se encuentra
+from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR # De la librería starlette importamos la HTTP_200_Ok y HTTP_500_INTERNAL_SERVER&_ERROR para informar si la petición del usuario ha sido procesada y devuelto un resultado con éxito o se ha producido un error interno del servidor
 
 class DataBase:
     def __init__(self):

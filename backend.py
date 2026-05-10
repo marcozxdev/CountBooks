@@ -47,7 +47,7 @@ app.title("System Books API backend")
 
 @app.get('/home', tags=["Home"])
 def home():
-    # HTML
+    HTMLResponse
   
     return {"status": "200"}
 

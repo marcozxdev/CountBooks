@@ -1,12 +1,39 @@
 from fastapi import FastAPI
 
 class DataBase:
-    def __init__(self, db_name):
+    def __init__(self):
         try:
-            self.conn = sql.connect(db_name)
+            self.db = "data_server.db"
+            self.conn = sql.connect(self.db_name)
         finally:
             self.conn.commit()
             self.conn.close()
+
+        self.create_table()
+
+    def create_table(self):
+        try:
+            self.conn = sql.connect(self.db_name)
+            self.cursor = self.conn.cursor()
+            self.cursor.execute(
+              """CREATE TABLE IF NOT EXISTS books(
+                   name_book TEXT,
+                   title TEXT,
+                   model TEXT,
+                   autor TEXT,
+                   book TEXT
+                )"""
+            )
+        finally:
+            self.conn.commit()
+            self.conn.close()
+    
+    def insert_data(self):
+        try:
+            self.conn = sql.connect(self.db_name)
+            self.cursor = self.conn.cursor()
+
+            self.instruction = 
 
 app = FastAPI()
 app.title("System Books API backend")

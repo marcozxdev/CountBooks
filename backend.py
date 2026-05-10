@@ -33,18 +33,25 @@ class DataBase:
             self.conn.commit()
             self.conn.close()
 
-    def db_protection(self):
+    def db_protection(self, data_users):
         FORBIDDEN_CHARACTERS = ["-", "_", "*", "(", ")", "#", "'", '"', ";", ":", "+", "{", "}"]
-
+        COMMANDS_FORBIDDEN = ["SELECT", "FROM", "UPDATE", "DROP", "DELETE", "UNION", "SET", "INSERT"]
+        self.is_secure = True
+        self.is_danger = False
+        
         for i in FORBIDDEN_CHARACTERS:
-            for j in 
+            for j in data_users:
+                if j == i:
+                    self.is_secure = False
+                    break
+                
     
-    def insert_data(self, QUERY_SQL):
+    def insert_data(self, QUERY_SQL, data_users):
         try:
             self.conn = sql.connect(self.DB_NAME)
             self.cursor = self.conn.cursor()
 
-            is_secure = self.db_protection(QUERY_SQL)
+            scan_data_users = self.db_protection(data_user)
 
             if is_secure:
                 self.cursor.execute(QUERY_SQL) # Critical Vulnerability: SQL Inyection

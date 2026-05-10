@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi import HTML # Error: Se corregirá
 
 class DataBase:
     def __init__(self):
@@ -37,7 +38,7 @@ class DataBase:
             self.conn.commit()
             self.conn.close()
 
-class InputDats:
+class InputData:
     user_name: str
     psswd: str
 

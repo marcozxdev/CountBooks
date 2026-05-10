@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from fastapi import HTMLResponse
 from fastapi import HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from starlette.status import HTTP_403_FORBIDDEN, HTTP_404_NOT_FOUND
+from starlette.status import HTTP_200_OK, HTTP_500_INTERNAL_SERVER_ERROR
 
 class DataBase:
     def __init__(self):
@@ -67,7 +69,7 @@ def home():
     
     HTMLResponse(
         content=content_html
-        status=200
+        status=HTTP_200_OK
     )
   
     return {"status": "200"}

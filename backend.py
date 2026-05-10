@@ -1,9 +1,9 @@
 from fastapi import FastAPI
 
 class DataBase:
-    def __init__(self, name_db):
+    def __init__(self, db_name):
         try:
-            self.conn = sql.connect(name_db)
+            self.conn = sql.connect(db_name)
         finally:
             self.conn.commit()
             self.conn.close()

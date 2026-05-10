@@ -51,9 +51,10 @@ app.title("System Books API backend")
 
 app.add_middleware(
     CORSMiddleware,
-    header_origins=["*"],
-    header_credentials=True,
-    header_methods=["*"],
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"]
 )
 
 @app.get('/home', tags=["Home"])

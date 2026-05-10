@@ -97,7 +97,7 @@ def home():
     """
     
     HTMLResponse(
-        content=content_html
+        content=content_html,
         status=HTTP_200_OK
     )
   

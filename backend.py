@@ -37,6 +37,10 @@ class DataBase:
             self.conn.commit()
             self.conn.close()
 
+class InputDats:
+    user_name: str
+    psswd: str
+
 app = FastAPI()
 app.title("System Books API backend")
 
@@ -47,7 +51,7 @@ def home():
     return {"status": "200"}
 
 @app.post('/login', tags=["Login"])
-def login(user_name: str, psswd: str):
+def login(user_name: InputData, psswd: InputData):
     # db = DataBase()
   
     return {"status": "201"}

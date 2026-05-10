@@ -47,7 +47,26 @@ app.title("System Books API backend")
 
 @app.get('/home', tags=["Home"])
 def home():
-    HTMLResponse
+    content_html = """
+        <!DOCTYPE html>
+          <html lang="es">
+            <head>
+              <title>Home</title>
+                <meta charset="utf-8">
+                  <meta name="description" content="This is a frontend de start. Is the home">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+              <!-- <link rel="stylesheet" href="style.css"> -->
+            </head>
+            <body>
+              <h1>Welcome to home</h1>
+            </body>
+          </html>
+    """
+    
+    HTMLResponse(
+        content=content_html
+        status=200
+    )
   
     return {"status": "200"}
 

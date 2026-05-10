@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from fastapi import HTML # Error: Se corregirá
+from fastapi import HTMLResponse # Error: Se corregirá
 
 class DataBase:
     def __init__(self):

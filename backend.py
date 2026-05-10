@@ -34,7 +34,7 @@ class DataBase:
                    title TEXT,
                    model TEXT,
                    autor TEXT,
-                   book LONGBLOG
+                   book LONGBLOB
                 )"""
             )
         finally:

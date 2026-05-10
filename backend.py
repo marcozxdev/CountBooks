@@ -52,6 +52,8 @@ class DataBase:
         
         # Bucle anidado para comparar cada carácter prohibido con cada dato ingresado por el usuario
         for i in FORBIDDEN_CHARACTERS:
+            if not self.is_secure:
+                break
             for j in data_users:
                 if j == i:
                     self.is_secure = False # Si encuentra una coincidencia, marca la entrada como no segura

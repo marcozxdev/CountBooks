@@ -1,5 +1,8 @@
 from fastapi import FastAPI
-from fastapi import HTMLResponse # Error: Se corregirá
+from fastapi import HTMLResponse
+from fastapi import HTTPException
+from fastapi.middleware.cors import CORSMiddleware
+import starlette
 
 class DataBase:
     def __init__(self):

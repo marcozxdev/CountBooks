@@ -49,6 +49,13 @@ class InputData:
 app = FastAPI()
 app.title("System Books API backend")
 
+app.add_middleware(
+    CORSMiddleware,
+    header_origins=["*"],
+    header_credentials=True,
+    header_methods=["*"],
+)
+
 @app.get('/home', tags=["Home"])
 def home():
     content_html = """

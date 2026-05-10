@@ -1,8 +1,12 @@
 from fastapi import FastAPI
 
 class DataBase:
-    def __init__(self):
-        pass
+    def __init__(self, name_db):
+        try:
+            self.conn = sql.connect(name_db)
+        finally:
+            self.conn.commit()
+            self.conn.close()
 
 app = FastAPI()
 app.title("System Books API backend")

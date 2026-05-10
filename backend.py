@@ -3,8 +3,8 @@ from fastapi import FastAPI
 class DataBase:
     def __init__(self):
         try:
-            self.db = "data_server.db"
-            self.conn = sql.connect(self.db_name)
+            self.DB_NAME = "data_server.db"
+            self.conn = sql.connect(self.DB_NAME)
         finally:
             self.conn.commit()
             self.conn.close()
@@ -13,7 +13,7 @@ class DataBase:
 
     def create_table(self):
         try:
-            self.conn = sql.connect(self.db_name)
+            self.conn = sql.connect(self.DB_NAME)
             self.cursor = self.conn.cursor()
             self.cursor.execute(
               """CREATE TABLE IF NOT EXISTS books(
@@ -28,12 +28,14 @@ class DataBase:
             self.conn.commit()
             self.conn.close()
     
-    def insert_data(self):
+    def insert_data(self, QUERY_SQL):
         try:
-            self.conn = sql.connect(self.db_name)
+            self.conn = sql.connect(self.DB_NAME)
             self.cursor = self.conn.cursor()
-
-            self.instruction = 
+            self.cursor.execute(QUERY_SQL) # Critical Vulnerability: SQL Inyection
+        finally:
+            self.conn.commit()
+            self.conn.close()
 
 app = FastAPI()
 app.title("System Books API backend")

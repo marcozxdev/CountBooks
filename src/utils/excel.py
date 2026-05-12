@@ -17,12 +17,13 @@ MAPEO_COLUMNAS = {
     "PRESTADO"                         : "prestado",
     "DONADO"                           : "donado",
     "FECHA"                            : "fecha",
+    "PERDIDO"                          : "perdido"
 }
 
 # columnas de la DB — si el Excel las tiene tal cual no necesita mapeo
 COLUMNAS_DB = [
     "titulo", "categoria", "editorial", "codigo_ref", "codigo_isbn",
-    "referencia", "cantidad", "estado", "autor", "prestado", "donado", "fecha"
+    "referencia", "cantidad", "estado", "autor", "prestado", "donado", "fecha", "perdido"
 ]
 
 # requeridas según el tipo de Excel
@@ -94,6 +95,7 @@ def _filas_a_libros(df: pd.DataFrame) -> list:
             prestado    = str(_get(fila, "prestado",    "NO")),
             donado      = str(_get(fila, "donado",      "NO")),
             fecha       = str(_get(fila, "fecha",       "")),
+            perdido    =  str(_get(fila, "perdido", "NO"))
         )
         libros.append(libro)
     return libros
@@ -146,6 +148,7 @@ def exportar_excel(libros: list, ruta: str) -> None:
             "prestado"    : libro.prestado,
             "donado"      : libro.donado,
             "fecha"       : libro.fecha,
+            "perdido": libro.perdido
         })
 
     df = pd.DataFrame(filas)
@@ -159,8 +162,8 @@ def exportar_excel(libros: list, ruta: str) -> None:
 # df = pd.read_excel("docs/INVENTARIO GAB - 2023.xlsx")
 # print(df.columns.tolist())  # imprime los nombres exactos de las columnas
 
-book: BookModel
-data =  leer_excel("docs/INVENTARIO GAB - 2023.xlsx")
+# book: BookModel
+# data =  leer_excel("docs/INVENTARIO GAB - 2023.xlsx")
 
     
-print(data[100].a_book())
+# print(data[100].a_book())

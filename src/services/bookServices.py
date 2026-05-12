@@ -4,9 +4,8 @@ from src.database.database import Database
 
 
 class BookService:
-    def __init__(self, repo: BookRepo, db: Database):
+    def __init__(self, repo: BookRepo):
         self.repo = repo
-        self.db = db
 
     # -------------------------
     # Consultas

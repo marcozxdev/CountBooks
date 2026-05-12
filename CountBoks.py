@@ -4,4 +4,4 @@ from src.services.bookServices import BookService
 from src.repository.bookRepo import BookRepo
 from src.database.database import db
 
-run_app(service=BookService(BookRepo(db), db))
+run_app(service=BookService(BookRepo(db)))

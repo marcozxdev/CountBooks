@@ -66,7 +66,8 @@ def estructure_db(database: Database):
         autor TEXT,
         prestado TEXT,
         donado TEXT,
-        fecha TEXT
+        fecha TEXT,
+        perdido TEXT
     )
     """)
 

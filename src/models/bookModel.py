@@ -14,7 +14,8 @@ class BookModel:
         autor: str="", 
         prestado: str="NO", 
         donado: str="NO", 
-        fecha: str=""
+        fecha: str="",
+        perdido: str="NO"
         ):
 
         self.titulo = titulo
@@ -29,12 +30,13 @@ class BookModel:
         self.prestado = prestado
         self.donado = donado
         self.fecha = fecha
+        self.perdido = perdido
         self.id: int = None
 
     def a_book(self):
         book = {"titulo": self.titulo, "categoria": self.categoria, "editorial": self.editorial,
                 "codigo_ref": self.codigo_ref,"codigo_isbn": self.codigo_isbn, "referencia": self.referencia, "cantidad": self.cantidad, "estado": self.estado, 
-                "autor": self.autor, "prestado": self.prestado, "donado": self.donado, "fecha": self.fecha, "id": self.id }
+                "autor": self.autor, "prestado": self.prestado, "donado": self.donado, "fecha": self.fecha, "perdido": self.perdido, "id": self.id }
         return book        
 
     

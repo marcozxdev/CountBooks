@@ -134,14 +134,24 @@ class BookRepo:
         Inserta una lista de BookModel en la DB de forma masiva.
         Retorna (exitosos, fallidos).
         """
-        exitosos = 0
-        fallidos = 0
-        for book in books:
-            if self.add_book(book):
-                exitosos += 1
-            else:
-                fallidos += 1
-        return exitosos, fallidos
+        try:
+            datos = [
+            (b.titulo, b.categoria, b.editorial, b.codigo_ref,
+             b.codigo_isbn, b.referencia, b.cantidad, b.estado,
+             b.autor, b.prestado, b.donado, b.fecha)
+            for b in books
+        ]
+            self.db.cursor.executemany("""
+            INSERT INTO libros 
+            (titulo, categoria, editorial, codigo_ref, codigo_isbn,
+             referencia, cantidad, estado, autor, prestado, donado, fecha)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+            """, datos)
+            self.db.commit()
+            return len(datos), 0
+        except Exception as e:
+            self.db.rollback()
+            return 0, len(books)
 
     def update_book(self, book_id: int, new_book: BookModel) -> bool:
         """

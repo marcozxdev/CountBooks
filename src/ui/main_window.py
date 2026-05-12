@@ -997,6 +997,34 @@ class AddBookSection(QWidget):
 # Sección 3 — Gestor de datos
 # ══════════════════════════════════════════════════════════════════════════════
 
+
+
+from PySide6.QtCore import QThread, Signal
+
+class ImportWorker(QThread):
+    progress = Signal(int)
+    finished = Signal(dict)
+    error    = Signal(str)
+
+    def __init__(self, service, ruta):
+        super().__init__()
+        self.service = service
+        self.ruta    = ruta
+
+    def run(self):
+        try:
+            from src.utils.excel import leer_excel
+            libros = leer_excel(self.ruta)
+            self.progress.emit(50)
+            result = self.service.add_books_from_excel(libros)
+            self.progress.emit(100)
+            self.finished.emit(result)
+        except Exception as e:
+            self.error.emit(str(e))
+
+
+
+
 class DataManagerSection(QWidget):
     def __init__(self, service=None, parent=None):
         super().__init__(parent)
@@ -1286,25 +1314,22 @@ class DataManagerSection(QWidget):
             self.import_btn.setEnabled(True)
 
     def _run_import(self):
-        if not self.import_path:
+
+        if not self.import_path or not self.service:
             return
+        self.import_btn.setEnabled(False)
         self.import_progress.setVisible(True)
-        self.import_progress.setValue(0)
-        if self.service:
-            try:
-                from src.utils.excel import leer_excel
-                libros = leer_excel(self.import_path)
-                self.import_progress.setValue(50)
-                result = self.service.add_books_from_excel(libros)
-                self.import_progress.setValue(100)
-                QMessageBox.information(self, "Importación completada",
-                    f"Exitosos: {result['exitosos']}\nFallidos: {result['fallidos']}")
-            except Exception as e:
-                self.import_progress.setVisible(False)
-                QMessageBox.critical(self, "Error de importación", str(e))
-        else:
-            self.import_progress.setValue(100)
-            QMessageBox.information(self, "Demo", "Importación simulada correctamente.")
+
+        self._worker = ImportWorker(self.service, self.import_path)
+        self._worker.progress.connect(self.import_progress.setValue)
+        self._worker.finished.connect(self._on_import_done)
+        self._worker.error.connect(lambda e: QMessageBox.critical(self, "Error", e))
+        self._worker.start()
+
+    def _on_import_done(self, result):
+        self.import_btn.setEnabled(True)
+        QMessageBox.information(self, "Importación completada",
+        f"Exitosos: {result['exitosos']}\nFallidos: {result['fallidos']}")
 
     def _run_export(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -1324,6 +1349,7 @@ class DataManagerSection(QWidget):
                 QMessageBox.critical(self, "Error", str(e))
         else:
             QMessageBox.information(self, "Demo", f"Exportación simulada:\n{path}")
+
 
 
 # ══════════════════════════════════════════════════════════════════════════════

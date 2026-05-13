@@ -704,13 +704,10 @@ class CollectionSection(QWidget):
         left_col.addWidget(title)
         left_col.addWidget(self.subtitle)
 
-        new_btn = QPushButton("NUEVO REGISTRO")
-        new_btn.setObjectName("btn_primary")
-        new_btn.setCursor(QCursor(Qt.PointingHandCursor))
+  
 
         hdr_row.addLayout(left_col)
         hdr_row.addStretch()
-        hdr_row.addWidget(new_btn, 0, Qt.AlignBottom)
         root.addLayout(hdr_row)
 
         # Tabla + panel detalle
@@ -754,18 +751,79 @@ class CollectionSection(QWidget):
 
     def _make_table(self) -> QTableWidget:
         t = QTableWidget()
+
         t.setColumnCount(len(COLS))
         t.setHorizontalHeaderLabels([c[0] for c in COLS])
+
         t.setEditTriggers(QAbstractItemView.NoEditTriggers)
+
         t.setSelectionBehavior(QAbstractItemView.SelectRows)
         t.setSelectionMode(QAbstractItemView.SingleSelection)
+
         t.verticalHeader().setVisible(False)
-        t.horizontalHeader().setStretchLastSection(False)
-        t.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeToContents)
-        t.horizontalHeader().setSectionResizeMode(1, QHeaderView.Stretch)
+
+        # HEADER
+        header = t.horizontalHeader()
+
+        header.setStretchLastSection(False)
+
+        # evita columnas demasiado pequeñas
+        header.setMinimumSectionSize(80)
+
+        # ID
+        header.setSectionResizeMode(
+            0,
+            QHeaderView.ResizeToContents
+        )
+
+        # TITULO (columna principal)
+        header.setSectionResizeMode(
+            1,
+            QHeaderView.Stretch
+        )
+
+        # ancho inicial del título
+        t.setColumnWidth(1, 420)
+
+        # RESTO DE COLUMNAS
+        for i in range(2, len(COLS)):
+            header.setSectionResizeMode(
+                i,
+                QHeaderView.ResizeToContents
+            )
+
+        # OPTIMIZACIONES
+        t.setWordWrap(False)
+
+        t.setSortingEnabled(False)
+
+        t.setAlternatingRowColors(False)
+
         t.setShowGrid(True)
-        t.itemSelectionChanged.connect(self._on_row_selected)
+
+        # estilo del header
+        t.setStyleSheet(f"""
+            QHeaderView::section {{
+                background-color: {C_PRIMARY};
+                color: white;
+                padding: 8px;
+                border: none;
+                font-size: 11px;
+                font-weight: bold;
+            }}
+
+            QTableWidget {{
+                gridline-color: #d9dee7;
+                font-size: 12px;
+            }}
+        """)
+
+        t.itemSelectionChanged.connect(
+            self._on_row_selected
+        )
+
         return t
+
 
     def _make_detail_panel(self) -> QWidget:
         panel = QWidget()
@@ -803,63 +861,94 @@ class CollectionSection(QWidget):
         self._fill_table(self.books)
 
     def _fill_table(self, books: list):
+    
+        self.table.setUpdatesEnabled(False)
+    
         self.table.setRowCount(0)
+    
         prestados = 0
         perdidos  = 0
-        for book in books:
-            row = self.table.rowCount()
-            self.table.insertRow(row)
+    
+        self.table.setRowCount(len(books))
+
+        for row, book in enumerate(books):
+    
             for col, (_, key) in enumerate(COLS):
+            
                 if key is None:
                     btn = QPushButton("EDITAR")
                     btn.setObjectName("btn_ghost")
                     btn.setFixedHeight(24)
                     btn.setCursor(QCursor(Qt.PointingHandCursor))
-                    btn.clicked.connect(lambda _, b=book: self._open_edit(b))
+    
+                    btn.clicked.connect(
+                        lambda _, b=book: self._open_edit(b)
+                    )
+    
                     cell = QWidget()
+    
                     cl = QHBoxLayout(cell)
                     cl.setContentsMargins(4, 2, 4, 2)
+    
                     cl.addWidget(btn)
+    
                     self.table.setCellWidget(row, col, cell)
+    
                 else:
                     val = book.get(key, "")
-                    item = QTableWidgetItem(str(val) if val is not None else "—")
+    
+                    item = QTableWidgetItem(
+                        str(val) if val is not None else "—"
+                    )
+    
                     item.setData(Qt.UserRole, book)
-
+    
                     if key == "estado":
                         e = str(val).upper()
+    
                         if e == "BUENO":
                             item.setForeground(QColor(C_GREEN_700))
                             item.setText(f"• {e}")
+    
                         elif e in ("MALO", "DETERIORADO"):
                             item.setForeground(QColor(C_ERROR))
                             item.setText(f"• {e}")
+    
                         else:
                             item.setForeground(QColor(C_WARN))
                             item.setText(f"• {e}")
-
-                    if key == "prestado" and val and str(val).upper() != "NO":
-                        item.setBackground(QColor(C_WARN_BG))
-                        item.setForeground(QColor(C_WARN))
-                        prestados += 1
-
+    
+                    if key == "prestado":
+                        if val and str(val).upper() != "NO":
+                            item.setBackground(QColor(C_WARN_BG))
+                            item.setForeground(QColor(C_WARN))
+                            prestados += 1
+    
                     if key == "perdido":
+                    
                         if str(val).upper() == "SI":
                             item.setBackground(QColor(C_PURPLE_50))
                             item.setForeground(QColor(C_PURPLE_700))
                             item.setText("• SI")
                             perdidos += 1
+    
                         else:
                             item.setText("• NO")
                             item.setForeground(QColor(C_TEXT_LIGHT))
-
+    
                     self.table.setItem(row, col, item)
-
+    
         n = len(books)
-        self.subtitle.setText(f"Repositorio Activo: {n:,} volúmenes catalogados")
+    
+        self.subtitle.setText(
+            f"Repositorio Activo: {n:,} volúmenes catalogados"
+        )
+    
         self.lbl_prestados.setText(str(prestados))
         self.lbl_perdidos.setText(str(perdidos))
-
+    
+        self.table.setUpdatesEnabled(True)
+    
     def _render_detail(self, b: dict):
         self._dp_clear()
 
@@ -972,19 +1061,44 @@ class CollectionSection(QWidget):
         if self.service:
             try:
                 from src.models.bookModel import BookModel
-                m = BookModel(**{k: v for k, v in updated.items() if k != "id"})
-                ok, err = self.service.update_book(updated["id"], m)
+
+                m = BookModel(
+                    **{
+                        k: v
+                        for k, v in updated.items()
+                        if k != "id"
+                    }
+                )
+
+                ok, err = self.service.update_book(
+                    updated["id"],
+                    m
+                )
+
                 if not ok:
-                    QMessageBox.critical(self, "Error", err)
+                    QMessageBox.critical(
+                        self,
+                        "Error",
+                        err
+                    )
                     return
+
             except Exception as e:
-                QMessageBox.critical(self, "Error", str(e))
+                QMessageBox.critical(
+                    self,
+                    "Error",
+                    str(e)
+                )
                 return
+
         for i, b in enumerate(self.books):
+
             if b.get("id") == updated.get("id"):
                 self.books[i] = updated
                 break
-        self._fill_table(self.books)
+
+    # self._fill_table(self.books)
+
         self._render_detail(updated)
 
 

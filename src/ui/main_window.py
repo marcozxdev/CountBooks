@@ -46,6 +46,8 @@ C_WARN           = "#7a5c00"
 C_BLUE_50        = "#eff6ff"
 C_BLUE_700       = "#1d4ed8"
 C_BLUE_950       = "#172554"
+C_PURPLE_50      = "#faf5ff"
+C_PURPLE_700     = "#7e22ce"
 
 FONT_SERIF = "Georgia"
 FONT_SANS  = "Segoe UI"
@@ -158,6 +160,19 @@ QPushButton#btn_ghost {{
     letter-spacing: 1px;
 }}
 QPushButton#btn_ghost:hover {{ background-color: {C_BG_ALT}; }}
+QPushButton#btn_danger {{
+    background-color: transparent;
+    color: {C_ERROR};
+    border: 1px solid {C_ERROR};
+    border-radius: 2px;
+    padding: 5px 12px;
+    font-size: 11px;
+    font-weight: bold;
+    letter-spacing: 1px;
+}}
+QPushButton#btn_danger:hover {{
+    background-color: {C_ERROR_BG};
+}}
 QTableWidget {{
     background-color: {C_SURFACE};
     border: 1px solid {C_BORDER};
@@ -258,6 +273,11 @@ QScrollBar:horizontal {{ height: 0; }}
 }}
 #badge_amber {{
     color: {C_ACCENT}; background-color: {C_ACCENT_LIGHT};
+    border-radius: 2px; padding: 2px 7px;
+    font-size: 10px; font-weight: bold; letter-spacing: 1px;
+}}
+#badge_purple {{
+    color: {C_PURPLE_700}; background-color: {C_PURPLE_50};
     border-radius: 2px; padding: 2px 7px;
     font-size: 10px; font-weight: bold; letter-spacing: 1px;
 }}
@@ -392,6 +412,11 @@ class SearchModal(QDialog):
                     isbn = QLabel(f"ISBN {book['codigo_isbn']}")
                     isbn.setStyleSheet(f"font-size: 11px; color: {C_TEXT_LIGHT}; background: transparent;")
                     meta.addWidget(isbn)
+                # Badge perdido en la búsqueda
+                if str(book.get("perdido", "NO")).upper() == "SI":
+                    perdido_lbl = QLabel("PERDIDO")
+                    perdido_lbl.setObjectName("badge_purple")
+                    meta.addWidget(perdido_lbl)
                 meta.addStretch()
 
                 rl.addWidget(tl)
@@ -433,102 +458,178 @@ class SearchModal(QDialog):
 class EditBookModal(QDialog):
     book_updated = Signal(dict)
 
+    MODAL_CSS = """
+    QDialog { background: #ffffff; }
+    QLineEdit { background: #faf9f8; border: 1px solid #cbd5e1;
+                border-radius: 2px; padding: 7px 10px; font-size: 13px; color: #1a1c1c; }
+    QLineEdit:focus { border: 1px solid #03192e; background: #ffffff; }
+    QComboBox { background: #faf9f8; border: 1px solid #cbd5e1;
+                border-radius: 2px; padding: 7px 10px; font-size: 13px; color: #1a1c1c; }
+    QComboBox::drop-down { border: none; width: 20px; }
+    QSpinBox { background: #faf9f8; border: 1px solid #cbd5e1;
+               border-radius: 2px; padding: 7px 10px; font-size: 13px; color: #1a1c1c; }
+    QPushButton#btn_cancel {
+        background: transparent; color: #475569; border: 1px solid #E8E4D9;
+        border-radius: 2px; padding: 8px 18px; font-size: 12px; font-weight: bold;
+        min-width: 90px;
+    }
+    QPushButton#btn_cancel:hover { background: #f4f3f2; }
+    QPushButton#btn_save {
+        background: #03192e; color: white; border: none;
+        border-radius: 2px; padding: 8px 18px; font-size: 12px; font-weight: bold;
+        min-width: 140px;
+    }
+    QPushButton#btn_save:hover { background: #1a2e44; }
+    QPushButton#btn_save:pressed { background: #061d32; }
+    """
+
     def __init__(self, book: dict, parent=None):
         super().__init__(parent)
-        self.setWindowTitle("Editar libro")
-        self.setMinimumWidth(540)
-        self.setMinimumHeight(580)
-        self.setStyleSheet(QSS)
+        self.setWindowTitle("Editar libro — " + book.get("titulo", ""))
+        self.setFixedWidth(620)
+        self.setWindowFlags(Qt.Window | Qt.WindowCloseButtonHint)
+        self.setStyleSheet(self.MODAL_CSS)
+        self.setAttribute(Qt.WA_DeleteOnClose)
         self.original = book
         self.inputs = {}
         self._build(book)
 
-    def _add(self, form: QFormLayout, key: str, label: str, val, widget=None):
-        lbl = field_label(label)
-        w = widget if widget else QLineEdit(str(val) if val else "")
-        if not widget:
-            w.setObjectName("modal_input")
+    def _inp(self, key, val):
+        w = QLineEdit(str(val) if val else "")
         self.inputs[key] = w
-        form.addRow(lbl, w)
+        return w
 
-    def _build(self, b: dict):
+    def _cmb(self, key, opts, current):
+        w = QComboBox()
+        w.addItems(opts)
+        w.setCurrentIndex(max(0, w.findText((str(current) or opts[0]).upper())))
+        self.inputs[key] = w
+        return w
+
+    def _cell(self, label, widget):
+        cell = QWidget()
+        cell.setStyleSheet("background: transparent;")
+        lay = QVBoxLayout(cell)
+        lay.setContentsMargins(0, 0, 0, 0)
+        lay.setSpacing(4)
+        lbl = QLabel(label)
+        lbl.setStyleSheet(
+            "font-size: 10px; font-weight: bold; color: #64748b; "
+            "letter-spacing: 1px; background: transparent;"
+        )
+        lay.addWidget(lbl)
+        lay.addWidget(widget)
+        return cell
+
+    def _build(self, b):
         root = QVBoxLayout(self)
         root.setSpacing(0)
         root.setContentsMargins(0, 0, 0, 0)
 
+        # Header
         hdr = QWidget()
-        hdr.setStyleSheet(f"background-color: {C_PRIMARY};")
+        hdr.setStyleSheet("background-color: #03192e;")
+        hdr.setFixedHeight(68)
         hl = QVBoxLayout(hdr)
-        hl.setContentsMargins(24, 18, 24, 18)
+        hl.setContentsMargins(20, 10, 20, 10)
+        hl.setSpacing(2)
+        title_row = QHBoxLayout()
         tl = QLabel(b.get("titulo", "Libro"))
-        tl.setStyleSheet(
-            f"font-family: '{FONT_SERIF}'; font-size: 17px; font-style: italic; "
-            f"font-weight: bold; color: white; background: transparent;"
-        )
         tl.setWordWrap(True)
-        al = QLabel("Editar campos del registro")
-        al.setStyleSheet(f"font-size: 11px; color: {C_ACCENT_LIGHT}; background: transparent;")
-        hl.addWidget(tl)
-        hl.addWidget(al)
+        tl.setStyleSheet(
+            "font-family: Georgia; font-size: 14px; font-style: italic; "
+            "font-weight: bold; color: white; background: transparent;"
+        )
+        title_row.addWidget(tl, 1)
+        if str(b.get("perdido", "NO")).upper() == "SI":
+            badge = QLabel("PERDIDO")
+            badge.setStyleSheet(
+                "color: white; background-color: #7e22ce; border-radius: 2px; "
+                "padding: 2px 7px; font-size: 10px; font-weight: bold;"
+            )
+            title_row.addWidget(badge, 0, Qt.AlignVCenter)
+        hl.addLayout(title_row)
+        sub = QLabel("Editar campos del registro")
+        sub.setStyleSheet("font-size: 11px; color: #fed488; background: transparent;")
+        hl.addWidget(sub)
         root.addWidget(hdr)
 
-        scroll = QScrollArea()
-        scroll.setWidgetResizable(True)
-        scroll.setFrameShape(QFrame.NoFrame)
-        cont = QWidget()
-        cont.setStyleSheet(f"background: {C_SURFACE};")
-        form = QFormLayout(cont)
-        form.setContentsMargins(28, 22, 28, 22)
-        form.setSpacing(14)
-        form.setLabelAlignment(Qt.AlignLeft)
-        form.setRowWrapPolicy(QFormLayout.WrapAllRows)
+        # Grid de campos
+        body = QWidget()
+        body.setStyleSheet("background: #ffffff;")
+        gr = QGridLayout(body)
+        gr.setContentsMargins(20, 14, 20, 10)
+        gr.setHorizontalSpacing(14)
+        gr.setVerticalSpacing(10)
+        gr.setColumnStretch(0, 1)
+        gr.setColumnStretch(1, 1)
 
-        self._add(form, "titulo",      "TÍTULO *",           b.get("titulo",""))
-        self._add(form, "autor",       "AUTOR *",            b.get("autor",""))
-        self._add(form, "editorial",   "EDITORIAL",          b.get("editorial",""))
-        self._add(form, "categoria",   "CATEGORÍA",          b.get("categoria",""))
-        self._add(form, "codigo_ref",  "CÓDIGO REFERENCIA",  b.get("codigo_ref",""))
-        self._add(form, "codigo_isbn", "ISBN",               b.get("codigo_isbn",""))
-        self._add(form, "referencia",  "REFERENCIA",         b.get("referencia",""))
-        self._add(form, "fecha",       "FECHA",              b.get("fecha",""))
+        gr.addWidget(self._cell("TITULO *",    self._inp("titulo",      b.get("titulo",""))),     0, 0, 1, 2)
+        gr.addWidget(self._cell("AUTOR *",     self._inp("autor",       b.get("autor",""))),      1, 0)
+        gr.addWidget(self._cell("EDITORIAL",   self._inp("editorial",   b.get("editorial",""))),  1, 1)
+        gr.addWidget(self._cell("CATEGORIA",   self._inp("categoria",   b.get("categoria",""))),  2, 0)
+        gr.addWidget(self._cell("COD. REF.",   self._inp("codigo_ref",  b.get("codigo_ref",""))), 2, 1)
+        gr.addWidget(self._cell("ISBN",        self._inp("codigo_isbn", b.get("codigo_isbn",""))),3, 0)
+        gr.addWidget(self._cell("REFERENCIA",  self._inp("referencia",  b.get("referencia",""))), 3, 1)
 
+        fecha_w = self._inp("fecha", b.get("fecha",""))
         spin = QSpinBox()
-        spin.setObjectName("modal_spin")
         spin.setRange(0, 9999)
         spin.setValue(int(b.get("cantidad", 1) or 1))
-        self._add(form, "cantidad", "CANTIDAD *", "", widget=spin)
+        self.inputs["cantidad"] = spin
+        gr.addWidget(self._cell("FECHA",      fecha_w), 4, 0)
+        gr.addWidget(self._cell("CANTIDAD *", spin),    4, 1)
 
-        for key, label, opts in [
-            ("estado", "ESTADO",  ["BUENO","REGULAR","MALO","DETERIORADO"]),
-            ("donado", "DONADO",  ["NO","SI"]),
-        ]:
-            cb = QComboBox()
-            cb.setObjectName("modal_combo")
-            cb.addItems(opts)
-            cb.setCurrentIndex(max(0, cb.findText((b.get(key) or opts[0]).upper())))
-            self._add(form, key, label, "", widget=cb)
+        gr.addWidget(self._cell("ESTADO",
+            self._cmb("estado", ["BUENO","REGULAR","MALO","DETERIORADO"], b.get("estado","BUENO"))), 5, 0)
+        gr.addWidget(self._cell("DONADO",
+            self._cmb("donado", ["NO","SI"], b.get("donado","NO"))), 5, 1)
 
-        pr = QLineEdit(b.get("prestado") or "NO")
-        pr.setObjectName("modal_input")
-        pr.setPlaceholderText("Nombre de la persona o NO")
-        self._add(form, "prestado", "PRESTADO A", "", widget=pr)
+        gr.addWidget(self._cell("PERDIDO",
+            self._cmb("perdido", ["NO","SI"], b.get("perdido","NO"))), 6, 0)
+        prestado_w = self._inp("prestado", b.get("prestado","NO"))
+        prestado_w.setPlaceholderText("Nombre o NO")
+        gr.addWidget(self._cell("PRESTADO A", prestado_w), 6, 1)
 
-        scroll.setWidget(cont)
-        root.addWidget(scroll, 1)
+        root.addWidget(body)
 
+        # Separador
+        sep = QFrame()
+        sep.setFrameShape(QFrame.HLine)
+        sep.setStyleSheet("background: #E8E4D9; max-height: 1px; border: none;")
+        root.addWidget(sep)
+
+        # Footer fijo
         ft = QWidget()
-        ft.setStyleSheet(f"background: {C_SLATE_50}; border-top: 1px solid {C_BORDER};")
+        ft.setStyleSheet("background: #f8fafc;")
+        ft.setFixedHeight(54)
         fl = QHBoxLayout(ft)
-        fl.setContentsMargins(24, 12, 24, 12)
+        fl.setContentsMargins(20, 8, 20, 8)
+        fl.setSpacing(10)
         fl.addStretch()
+
         c_btn = QPushButton("CANCELAR")
-        c_btn.setObjectName("btn_ghost")
-        c_btn.clicked.connect(self.reject)
-        s_btn = QPushButton("GUARDAR CAMBIOS")
-        s_btn.setObjectName("btn_primary")
+        c_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        c_btn.setStyleSheet(
+            "QPushButton { background: transparent; color: #475569; "
+            "border: 1px solid #c4c6cd; border-radius: 2px; "
+            "padding: 8px 18px; font-size: 12px; font-weight: bold; min-width: 90px; }"
+            "QPushButton:hover { background: #f4f3f2; }"
+        )
+        c_btn.clicked.connect(self.close)
+
+        s_btn = QPushButton("  GUARDAR CAMBIOS  ")
+        s_btn.setCursor(QCursor(Qt.PointingHandCursor))
+        s_btn.setStyleSheet(
+            "QPushButton { background-color: #03192e; color: white; border: none; "
+            "border-radius: 2px; padding: 8px 18px; font-size: 12px; "
+            "font-weight: bold; min-width: 150px; }"
+            "QPushButton:hover { background-color: #1a2e44; }"
+            "QPushButton:pressed { background-color: #061d32; }"
+        )
         s_btn.clicked.connect(self._save)
+
         fl.addWidget(c_btn)
-        fl.addSpacing(8)
         fl.addWidget(s_btn)
         root.addWidget(ft)
 
@@ -541,23 +642,21 @@ class EditBookModal(QDialog):
 
     def _save(self):
         if not self._v("titulo"):
-            QMessageBox.warning(self, "Requerido", "El título es obligatorio.")
+            QMessageBox.warning(self, "Campo requerido", "El titulo es obligatorio.")
             return
         if not self._v("autor"):
-            QMessageBox.warning(self, "Requerido", "El autor es obligatorio.")
+            QMessageBox.warning(self, "Campo requerido", "El autor es obligatorio.")
             return
         self.book_updated.emit({
             "id": self.original.get("id"),
             **{k: self._v(k) for k in [
                 "titulo","autor","editorial","categoria","codigo_ref",
-                "codigo_isbn","referencia","fecha","cantidad","estado","prestado","donado"
+                "codigo_isbn","referencia","fecha","cantidad","estado",
+                "prestado","donado","perdido",
             ]}
         })
         self.accept()
 
-
-# ══════════════════════════════════════════════════════════════════════════════
-# Sección 1 — Colección
 # ══════════════════════════════════════════════════════════════════════════════
 
 COLS = [
@@ -573,7 +672,8 @@ COLS = [
     ("Autor",     "autor"),
     ("Prestado",  "prestado"),
     ("Donado",    "donado"),
-    ("",          None),
+    ("Perdido",   "perdido"),
+    ("",          None),          # columna de acciones
 ]
 
 
@@ -628,20 +728,27 @@ class CollectionSection(QWidget):
         # Stats pie
         stats_row = QHBoxLayout()
         stats_row.setSpacing(48)
-        self.lbl_prestados = QLabel("0")
-        self.lbl_prestados.setStyleSheet(
-            f"font-family: '{FONT_SERIF}'; font-size: 28px; font-weight: bold; "
-            f"color: {C_PRIMARY}; background: transparent;"
-        )
-        col = QVBoxLayout()
-        col.setSpacing(2)
-        col.addWidget(self.lbl_prestados)
-        sub = QLabel("PRÉSTAMOS ACTIVOS")
-        sub.setStyleSheet(
-            f"font-size: 10px; color: {C_SLATE_500}; letter-spacing: 1px; background: transparent;"
-        )
-        col.addWidget(sub)
-        stats_row.addLayout(col)
+
+        for attr, label in [
+            ("lbl_prestados", "PRÉSTAMOS ACTIVOS"),
+            ("lbl_perdidos",  "LIBROS PERDIDOS"),
+        ]:
+            lbl_num = QLabel("0")
+            lbl_num.setStyleSheet(
+                f"font-family: '{FONT_SERIF}'; font-size: 28px; font-weight: bold; "
+                f"color: {C_PRIMARY}; background: transparent;"
+            )
+            setattr(self, attr, lbl_num)
+            col = QVBoxLayout()
+            col.setSpacing(2)
+            col.addWidget(lbl_num)
+            sub = QLabel(label)
+            sub.setStyleSheet(
+                f"font-size: 10px; color: {C_SLATE_500}; letter-spacing: 1px; background: transparent;"
+            )
+            col.addWidget(sub)
+            stats_row.addLayout(col)
+
         stats_row.addStretch()
         root.addLayout(stats_row)
 
@@ -698,6 +805,7 @@ class CollectionSection(QWidget):
     def _fill_table(self, books: list):
         self.table.setRowCount(0)
         prestados = 0
+        perdidos  = 0
         for book in books:
             row = self.table.rowCount()
             self.table.insertRow(row)
@@ -717,23 +825,40 @@ class CollectionSection(QWidget):
                     val = book.get(key, "")
                     item = QTableWidgetItem(str(val) if val is not None else "—")
                     item.setData(Qt.UserRole, book)
+
                     if key == "estado":
                         e = str(val).upper()
                         if e == "BUENO":
                             item.setForeground(QColor(C_GREEN_700))
                             item.setText(f"• {e}")
-                        elif e in ("MALO","DETERIORADO"):
+                        elif e in ("MALO", "DETERIORADO"):
                             item.setForeground(QColor(C_ERROR))
                             item.setText(f"• {e}")
+                        else:
+                            item.setForeground(QColor(C_WARN))
+                            item.setText(f"• {e}")
+
                     if key == "prestado" and val and str(val).upper() != "NO":
                         item.setBackground(QColor(C_WARN_BG))
                         item.setForeground(QColor(C_WARN))
                         prestados += 1
+
+                    if key == "perdido":
+                        if str(val).upper() == "SI":
+                            item.setBackground(QColor(C_PURPLE_50))
+                            item.setForeground(QColor(C_PURPLE_700))
+                            item.setText("• SI")
+                            perdidos += 1
+                        else:
+                            item.setText("• NO")
+                            item.setForeground(QColor(C_TEXT_LIGHT))
+
                     self.table.setItem(row, col, item)
 
         n = len(books)
         self.subtitle.setText(f"Repositorio Activo: {n:,} volúmenes catalogados")
         self.lbl_prestados.setText(str(prestados))
+        self.lbl_perdidos.setText(str(perdidos))
 
     def _render_detail(self, b: dict):
         self._dp_clear()
@@ -742,16 +867,27 @@ class CollectionSection(QWidget):
         hdr.setStyleSheet(f"background-color: {C_PRIMARY};")
         hl = QVBoxLayout(hdr)
         hl.setContentsMargins(14, 14, 14, 14)
-        hl.setSpacing(4)
+        hl.setSpacing(6)
+
+        title_row = QHBoxLayout()
         tl = QLabel(b.get("titulo","—"))
         tl.setWordWrap(True)
         tl.setStyleSheet(
             f"font-family: '{FONT_SERIF}'; font-size: 14px; font-style: italic; "
             f"font-weight: bold; color: white; background: transparent;"
         )
+        title_row.addWidget(tl, 1)
+        if str(b.get("perdido","NO")).upper() == "SI":
+            p_badge = QLabel("PERDIDO")
+            p_badge.setStyleSheet(
+                f"color: white; background-color: {C_PURPLE_700}; "
+                f"border-radius: 2px; padding: 2px 6px; font-size: 9px; font-weight: bold;"
+            )
+            title_row.addWidget(p_badge, 0, Qt.AlignTop)
+        hl.addLayout(title_row)
+
         al = QLabel(b.get("autor","—"))
         al.setStyleSheet(f"font-size: 11px; color: {C_ACCENT_LIGHT}; background: transparent;")
-        hl.addWidget(tl)
         hl.addWidget(al)
         self._dp_lay.addWidget(hdr)
 
@@ -771,6 +907,7 @@ class CollectionSection(QWidget):
             ("Estado",      b.get("estado","—")),
             ("Prestado a",  b.get("prestado","NO")),
             ("Donado",      b.get("donado","NO")),
+            ("Perdido",     b.get("perdido","NO")),
             ("Fecha",       b.get("fecha","—")),
         ]:
             rw = QHBoxLayout()
@@ -780,9 +917,18 @@ class CollectionSection(QWidget):
                 f"font-size: 11px; font-weight: bold; color: {C_SLATE_500}; "
                 f"min-width: 72px; background: transparent;"
             )
-            vl = QLabel(val if val else "—")
+            display_val = val if val else "—"
+            vl = QLabel(display_val)
             vl.setWordWrap(True)
-            vl.setStyleSheet(f"font-size: 12px; color: {C_TEXT}; background: transparent;")
+
+            # Color especial para perdido = SI
+            if lbl_t == "Perdido" and str(val).upper() == "SI":
+                vl.setStyleSheet(f"font-size: 12px; color: {C_PURPLE_700}; font-weight: bold; background: transparent;")
+            elif lbl_t == "Prestado a" and str(val).upper() not in ("NO", "—", ""):
+                vl.setStyleSheet(f"font-size: 12px; color: {C_WARN}; background: transparent;")
+            else:
+                vl.setStyleSheet(f"font-size: 12px; color: {C_TEXT}; background: transparent;")
+
             rw.addWidget(lbl)
             rw.addWidget(vl, 1)
             bl.addLayout(rw)
@@ -808,9 +954,19 @@ class CollectionSection(QWidget):
             self._render_detail(book)
 
     def _open_edit(self, book: dict):
-        modal = EditBookModal(book, parent=self)
+        # Cerrar modal previo si existe
+        if hasattr(self, "_edit_modal") and self._edit_modal is not None:
+            try:
+                self._edit_modal.close()
+            except Exception:
+                pass
+        modal = EditBookModal(book, parent=None)  # sin parent para no bloquear
         modal.book_updated.connect(self._on_updated)
-        modal.exec()
+        modal.setWindowModality(Qt.NonModal)
+        modal.show()
+        modal.raise_()
+        modal.activateWindow()
+        self._edit_modal = modal
 
     def _on_updated(self, updated: dict):
         if self.service:
@@ -837,6 +993,7 @@ class CollectionSection(QWidget):
 # ══════════════════════════════════════════════════════════════════════════════
 
 class AddBookSection(QWidget):
+    book_saved = Signal()  # se emite tras guardar exitosamente
     def __init__(self, service=None, parent=None):
         super().__init__(parent)
         self.service = service
@@ -891,19 +1048,17 @@ class AddBookSection(QWidget):
         # Card bibliográfica
         b_card, b_hdr, b_body = make_card()
         b_hdr.addWidget(card_header_label("INFORMACIÓN BIBLIOGRÁFICA"))
-
         gr1 = QGridLayout()
         gr1.setSpacing(16)
-        gr1.addLayout(self._input_col("titulo",    "TÍTULO",    "Ej: Cien años de soledad"), 0, 0, 1, 3)
-        gr1.addLayout(self._input_col("autor",     "AUTOR",     "Gabriel García Márquez"),   1, 0)
-        gr1.addLayout(self._input_col("editorial", "EDITORIAL", "No tiene"),                 1, 1)
+        gr1.addLayout(self._input_col("titulo",    "TÍTULO *",   "Ej: Cien años de soledad"), 0, 0, 1, 3)
+        gr1.addLayout(self._input_col("autor",     "AUTOR *",    "Gabriel García Márquez"),   1, 0)
+        gr1.addLayout(self._input_col("editorial", "EDITORIAL",  "No tiene"),                 1, 1)
         b_body.addLayout(gr1)
         root.addWidget(b_card)
 
         # Card clasificación
         c_card, c_hdr, c_body = make_card()
         c_hdr.addWidget(card_header_label("CLASIFICACIÓN Y CONTROL"))
-
         gr2 = QGridLayout()
         gr2.setSpacing(16)
         gr2.addLayout(self._input_col("categoria",   "CATEGORÍA",  "No tiene"), 0, 0)
@@ -930,8 +1085,14 @@ class AddBookSection(QWidget):
         self.inputs["donado"] = donado_cb
         gr2.addLayout(self._input_col("donado", "DONADO", widget=donado_cb), 2, 0)
 
-        gr2.addLayout(self._input_col("prestado", "PRESTADO A (NOMBRE O NO)", "NO"), 2, 1)
-        gr2.addLayout(self._input_col("fecha",    "FECHA (AAAA-MM-DD)", ""),          2, 2)
+        perdido_cb = QComboBox()
+        perdido_cb.setObjectName("form_combo")
+        perdido_cb.addItems(["NO","SI"])
+        self.inputs["perdido"] = perdido_cb
+        gr2.addLayout(self._input_col("perdido", "PERDIDO", widget=perdido_cb), 2, 1)
+
+        gr2.addLayout(self._input_col("prestado", "PRESTADO A (NOMBRE O NO)", "NO"), 2, 2)
+        gr2.addLayout(self._input_col("fecha", "FECHA (AAAA-MM-DD)", ""), 3, 0)
 
         c_body.addLayout(gr2)
         root.addWidget(c_card)
@@ -991,38 +1152,46 @@ class AddBookSection(QWidget):
         QMessageBox.information(self, "Libro guardado",
             f"\"{titulo}\" fue agregado al inventario correctamente.")
         self._reset()
+        self.book_saved.emit()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
 # Sección 3 — Gestor de datos
 # ══════════════════════════════════════════════════════════════════════════════
 
+from PySide6.QtCore import QThread
 
-
-from PySide6.QtCore import QThread, Signal
 
 class ImportWorker(QThread):
     progress = Signal(int)
     finished = Signal(dict)
     error    = Signal(str)
 
-    def __init__(self, service, ruta):
+    def __init__(self, db_path, ruta):
         super().__init__()
-        self.service = service
+        self.db_path = db_path   # solo la ruta, NO el objeto Database
         self.ruta    = ruta
 
     def run(self):
         try:
             from src.utils.excel import leer_excel
+            from src.database.database import Database
+            from src.repository.bookRepo import BookRepo
+            from src.services.bookServices import BookService
+
+            # Crear conexion propia dentro de este hilo
+            db      = Database(self.db_path)
+            repo    = BookRepo(db)
+            service = BookService(repo)
+
             libros = leer_excel(self.ruta)
             self.progress.emit(50)
-            result = self.service.add_books_from_excel(libros)
+            result = service.add_books_from_excel(libros)
             self.progress.emit(100)
+            db.close()
             self.finished.emit(result)
         except Exception as e:
             self.error.emit(str(e))
-
-
 
 
 class DataManagerSection(QWidget):
@@ -1051,16 +1220,7 @@ class DataManagerSection(QWidget):
         root.addWidget(sub)
         root.addWidget(sep_line())
 
-        cols = QHBoxLayout()
-        cols.setSpacing(24)
-        cols.setAlignment(Qt.AlignTop)
-
-        # ─── Columna izquierda ───
-        left = QVBoxLayout()
-        left.setSpacing(20)
-        left.setAlignment(Qt.AlignTop)
-
-        # Card importar
+        # ─── Card importar ───
         imp, imp_hdr, imp_body = make_card()
         imp_hdr.addWidget(card_header_label("IMPORT FROM EXCEL"))
         imp_desc = QLabel(
@@ -1098,7 +1258,11 @@ class DataManagerSection(QWidget):
         dl.addWidget(sel_btn, 0, Qt.AlignCenter)
         imp_body.addWidget(drop)
 
-        schema = QLabel("Supported schemas: MARC21, Dublin Core, CountBooks Standard")
+        schema = QLabel(
+            "Columnas soportadas: titulo, autor, cantidad, categoria, editorial, "
+            "codigo_ref, codigo_isbn, referencia, estado, prestado, donado, fecha, perdido"
+        )
+        schema.setWordWrap(True)
         schema.setStyleSheet(
             f"font-size: 11px; color: {C_TEXT_LIGHT}; font-style: italic; background: transparent;"
         )
@@ -1119,189 +1283,46 @@ class DataManagerSection(QWidget):
             f"QProgressBar::chunk {{ background: {C_PRIMARY}; border-radius: 2px; }}"
         )
         imp_body.addWidget(self.import_progress)
-        left.addWidget(imp)
+        root.addWidget(imp)
 
-        # Card exportar
+        # ─── Card exportar ───
         exp, exp_hdr, exp_body = make_card()
         exp_hdr.addWidget(card_header_label("EXPORT LIBRARY"))
         exp_hdr.addStretch()
-        exp_btn = QPushButton("INITIATE EXPORT")
+        exp_btn = QPushButton("EXPORTAR EXCEL")
         exp_btn.setObjectName("btn_primary")
         exp_btn.clicked.connect(self._run_export)
         exp_hdr.addWidget(exp_btn)
 
-        exp_desc = QLabel("Genere un registro detallado de su colección.")
+        exp_desc = QLabel(
+            "Genera un archivo Excel (.xlsx) con todos los registros del inventario. "
+            "El archivo puede reimportarse directamente a CountBooks."
+        )
+        exp_desc.setWordWrap(True)
         exp_desc.setStyleSheet(
             f"font-size: 13px; color: {C_TEXT_MUTED}; background: transparent;"
         )
         exp_body.addWidget(exp_desc)
 
+        # Indicador de formato fijo
         fmt_row = QHBoxLayout()
-        fmt_row.setSpacing(48)
-
-        fmt_col = QVBoxLayout()
-        fmt_col.setSpacing(8)
-        fmt_col.addWidget(card_header_label("FORMAT"))
-        self.fmt_group = QButtonGroup(self)
-        for i, text in enumerate(["Excel Spreadsheet (.xlsx)", "JSON Dataset (.json)", "PDF Catalog (.pdf)"]):
-            rb = QRadioButton(text)
-            rb.setStyleSheet(f"font-size: 13px; color: {C_TEXT}; background: transparent;")
-            if i == 0: rb.setChecked(True)
-            self.fmt_group.addButton(rb, i)
-            fmt_col.addWidget(rb)
-        fmt_row.addLayout(fmt_col)
-
-        fld_col = QVBoxLayout()
-        fld_col.setSpacing(8)
-        fld_col.addWidget(card_header_label("INCLUDED FIELDS"))
-        self.cb_meta  = QCheckBox("Bibliographic Metadata")
-        self.cb_loans = QCheckBox("Loan History")
-        self.cb_notes = QCheckBox("Conservation Notes")
-        self.cb_meta.setChecked(True)
-        self.cb_loans.setChecked(True)
-        for cb in [self.cb_meta, self.cb_loans, self.cb_notes]:
-            cb.setStyleSheet(f"font-size: 13px; color: {C_TEXT}; background: transparent;")
-            fld_col.addWidget(cb)
-        fmt_row.addLayout(fld_col)
+        fmt_row.setSpacing(10)
+        fmt_icon = QLabel("✓")
+        fmt_icon.setStyleSheet(f"font-size: 14px; color: {C_GREEN_700}; background: transparent;")
+        fmt_lbl = QLabel("Excel Spreadsheet (.xlsx)")
+        fmt_lbl.setStyleSheet(f"font-size: 13px; color: {C_TEXT}; background: transparent;")
+        fmt_row.addWidget(fmt_icon)
+        fmt_row.addWidget(fmt_lbl)
         fmt_row.addStretch()
         exp_body.addLayout(fmt_row)
-        left.addWidget(exp)
+        root.addWidget(exp)
 
-        # ─── Columna derecha ───
-        right = QVBoxLayout()
-        right.setSpacing(20)
-        right.setAlignment(Qt.AlignTop)
-
-        # Card actividad
-        act, act_hdr, act_body = make_card()
-        act_hdr.addWidget(card_header_label("RECENT ACTIVITY"))
-        sub2 = QLabel("Log of synchronization and exports")
-        sub2.setStyleSheet(
-            f"font-size: 11px; color: {C_TEXT_LIGHT}; background: transparent;"
-        )
-        act_hdr.addSpacing(8)
-        act_hdr.addWidget(sub2)
-        act_body.setContentsMargins(0, 0, 0, 0)
-        act_body.setSpacing(0)
-        act_body.addWidget(self._build_activity())
-
-        view_all = QPushButton("VIEW FULL HISTORY")
-        view_all.setObjectName("btn_secondary")
-        act_body.addWidget(view_all)
-        right.addWidget(act)
-
-        # Card stats
-        st, st_hdr, st_body = make_card()
-        st_hdr.addWidget(card_header_label("ARCHIVO"))
-        sr = QHBoxLayout()
-        sr.setSpacing(0)
-        for val, label in [("8,241","TOTAL REGISTROS"),("124 GB","TAMAÑO"),("Diario","RESPALDO")]:
-            sc = QVBoxLayout()
-            sc.setSpacing(2)
-            vl = QLabel(val)
-            vl.setStyleSheet(
-                f"font-family: '{FONT_SERIF}'; font-size: 28px; font-weight: bold; "
-                f"color: {C_PRIMARY}; background: transparent;"
-            )
-            kl = QLabel(label)
-            kl.setStyleSheet(
-                f"font-size: 10px; color: {C_SLATE_500}; letter-spacing: 1px; background: transparent;"
-            )
-            sc.addWidget(vl)
-            sc.addWidget(kl)
-            sr.addLayout(sc)
-            sr.addStretch()
-        st_body.addLayout(sr)
-        right.addWidget(st)
-
-        cols.addLayout(left, 3)
-        cols.addLayout(right, 2)
-        root.addLayout(cols)
         root.addStretch()
 
         scroll.setWidget(cont)
         outer = QVBoxLayout(self)
         outer.setContentsMargins(0, 0, 0, 0)
         outer.addWidget(scroll)
-
-    def _build_activity(self) -> QWidget:
-        w = QWidget()
-        w.setStyleSheet(f"background: {C_SURFACE};")
-        lay = QVBoxLayout(w)
-        lay.setContentsMargins(0, 0, 0, 0)
-        lay.setSpacing(0)
-
-        items = [
-            ("Export: Full Library",     "2,450 records exported to JSON",                "Oct 24, 2023 · 14:20", "OK",         None),
-            ("Import: New Acquisitions", "65% of excel file parsed (142/220 books)",      "Oct 24, 2023 · 16:45", "PROCESSING", 65),
-            ("Export: Conservation Log", "32 records exported to Excel",                  "Oct 23, 2023 · 09:12", "OK",         None),
-            ("Import: Legacy Archive",   "Critical mapping error on row 45 (ISBN Format)","Oct 22, 2023 · 11:30", "FAILED",     None),
-        ]
-        badge_map = {
-            "OK":         ("badge_green", "Completed"),
-            "PROCESSING": ("badge_blue",  "Processing"),
-            "FAILED":     ("badge_red",   "Failed"),
-        }
-
-        for op, desc, date, status, progress in items:
-            row = QWidget()
-            row.setStyleSheet(
-                f"background: {C_SURFACE}; border-bottom: 1px solid {C_BORDER};"
-            )
-            rl = QVBoxLayout(row)
-            rl.setContentsMargins(20, 14, 20, 14)
-            rl.setSpacing(5)
-
-            top = QHBoxLayout()
-            op_lbl = QLabel(op)
-            op_lbl.setStyleSheet(
-                f"font-size: 13px; font-weight: bold; color: {C_PRIMARY}; background: transparent;"
-            )
-            badge_obj, badge_text = badge_map.get(status, ("badge_amber", status))
-            st_lbl = QLabel(badge_text)
-            st_lbl.setObjectName(badge_obj)
-            top.addWidget(op_lbl)
-            top.addStretch()
-            top.addWidget(st_lbl)
-            rl.addLayout(top)
-
-            if progress is not None:
-                pb = QProgressBar()
-                pb.setValue(progress)
-                pb.setMaximumHeight(4)
-                pb.setTextVisible(False)
-                pb.setStyleSheet(
-                    f"QProgressBar {{ border: none; background: {C_BG_ALT}; border-radius: 2px; }}"
-                    f"QProgressBar::chunk {{ background: {C_PRIMARY}; border-radius: 2px; }}"
-                )
-                rl.addWidget(pb)
-
-            desc_lbl = QLabel(desc)
-            desc_lbl.setStyleSheet(
-                f"font-size: 12px; color: "
-                f"{'#ba1a1a' if status == 'FAILED' else C_TEXT_MUTED}; background: transparent;"
-            )
-            rl.addWidget(desc_lbl)
-
-            bot = QHBoxLayout()
-            date_lbl = QLabel(date)
-            date_lbl.setStyleSheet(
-                f"font-size: 11px; color: {C_SLATE_400}; background: transparent;"
-            )
-            bot.addWidget(date_lbl)
-            bot.addStretch()
-            if status == "OK":
-                dl = QPushButton("DOWNLOAD")
-                dl.setObjectName("btn_ghost")
-                dl.setFixedHeight(22)
-                dl.setStyleSheet(
-                    f"font-size: 10px; font-weight: bold; color: {C_PRIMARY}; padding: 2px 10px;"
-                )
-                bot.addWidget(dl)
-            rl.addLayout(bot)
-            lay.addWidget(row)
-
-        return w
 
     def _select_file(self):
         path, _ = QFileDialog.getOpenFileName(
@@ -1314,22 +1335,36 @@ class DataManagerSection(QWidget):
             self.import_btn.setEnabled(True)
 
     def _run_import(self):
-
         if not self.import_path or not self.service:
             return
         self.import_btn.setEnabled(False)
         self.import_progress.setVisible(True)
 
-        self._worker = ImportWorker(self.service, self.import_path)
+        # Pasamos db_path para que el worker cree su propia conexion en su hilo
+        from src.database.database import DB_PATH
+        self._worker = ImportWorker(DB_PATH, self.import_path)
         self._worker.progress.connect(self.import_progress.setValue)
         self._worker.finished.connect(self._on_import_done)
-        self._worker.error.connect(lambda e: QMessageBox.critical(self, "Error", e))
+        self._worker.error.connect(lambda e: (
+            QMessageBox.critical(self, "Error de importación", e),
+            self.import_btn.setEnabled(True),
+        ))
         self._worker.start()
 
     def _on_import_done(self, result):
         self.import_btn.setEnabled(True)
-        QMessageBox.information(self, "Importación completada",
-        f"Exitosos: {result['exitosos']}\nFallidos: {result['fallidos']}")
+        msg = (
+            f"Importación completada.\n\n"
+            f"✔ Exitosos: {result['exitosos']}\n"
+            f"✘ Fallidos: {result['fallidos']}"
+        )
+        if result["fallidos"] > 0:
+            errores_str = "\n".join(
+                f"  Fila {e['fila']}: {e['titulo']} — {e['error']}"
+                for e in result["errores"][:5]
+            )
+            msg += f"\n\nPrimeros errores:\n{errores_str}"
+        QMessageBox.information(self, "Importación completada", msg)
 
     def _run_export(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -1351,33 +1386,47 @@ class DataManagerSection(QWidget):
             QMessageBox.information(self, "Demo", f"Exportación simulada:\n{path}")
 
 
-
 # ══════════════════════════════════════════════════════════════════════════════
 # Datos demo
 # ══════════════════════════════════════════════════════════════════════════════
 
 def _demo_books() -> list:
     return [
-        {"id":1,"titulo":"Cien años de soledad","autor":"Gabriel García Márquez",
-         "editorial":"Sudamericana","categoria":"Literatura","codigo_ref":"LIT-001",
-         "codigo_isbn":"978-0060883287","referencia":"FIC-A1-01","cantidad":4,
-         "estado":"BUENO","prestado":"NO","donado":"NO","fecha":"2020-01-15"},
-        {"id":2,"titulo":"El Principito","autor":"Antoine de Saint-Exupéry",
-         "editorial":"Salamandra","categoria":"Infantil","codigo_ref":"INF-003",
-         "codigo_isbn":"978-8498381498","referencia":"FIC-B2-03","cantidad":8,
-         "estado":"REGULAR","prestado":"Juan Pérez","donado":"SI","fecha":"2019-05-20"},
-        {"id":3,"titulo":"Sapiens: De animales a dioses","autor":"Yuval Noah Harari",
-         "editorial":"Debate","categoria":"Historia","codigo_ref":"HIS-012",
-         "codigo_isbn":"978-8499924212","referencia":"HIS-C3-12","cantidad":2,
-         "estado":"BUENO","prestado":"NO","donado":"NO","fecha":"2021-03-10"},
-        {"id":4,"titulo":"Estructuras de datos en Python","autor":"Lee & Hubbard",
-         "editorial":"O'Reilly","categoria":"Tecnología","codigo_ref":"TEC-007",
-         "codigo_isbn":"978-1449367879","referencia":"TEC-D4-07","cantidad":3,
-         "estado":"MALO","prestado":"NO","donado":"NO","fecha":"2018-11-01"},
-        {"id":5,"titulo":"Don Quijote de la Mancha","autor":"Miguel de Cervantes",
-         "editorial":"Alfaguara","categoria":"Literatura","codigo_ref":"LIT-002",
-         "codigo_isbn":"978-8420412146","referencia":"FIC-A1-02","cantidad":6,
-         "estado":"DETERIORADO","prestado":"María López","donado":"NO","fecha":"2015-07-22"},
+        {
+            "id": 1, "titulo": "Cien años de soledad", "autor": "Gabriel García Márquez",
+            "editorial": "Sudamericana", "categoria": "Literatura", "codigo_ref": "LIT-001",
+            "codigo_isbn": "978-0060883287", "referencia": "FIC-A1-01", "cantidad": 4,
+            "estado": "BUENO", "prestado": "NO", "donado": "NO", "fecha": "2020-01-15",
+            "perdido": "NO",
+        },
+        {
+            "id": 2, "titulo": "El Principito", "autor": "Antoine de Saint-Exupéry",
+            "editorial": "Salamandra", "categoria": "Infantil", "codigo_ref": "INF-003",
+            "codigo_isbn": "978-8498381498", "referencia": "FIC-B2-03", "cantidad": 8,
+            "estado": "REGULAR", "prestado": "Juan Pérez", "donado": "SI",
+            "fecha": "2019-05-20", "perdido": "NO",
+        },
+        {
+            "id": 3, "titulo": "Sapiens: De animales a dioses", "autor": "Yuval Noah Harari",
+            "editorial": "Debate", "categoria": "Historia", "codigo_ref": "HIS-012",
+            "codigo_isbn": "978-8499924212", "referencia": "HIS-C3-12", "cantidad": 2,
+            "estado": "BUENO", "prestado": "NO", "donado": "NO", "fecha": "2021-03-10",
+            "perdido": "NO",
+        },
+        {
+            "id": 4, "titulo": "Estructuras de datos en Python", "autor": "Lee & Hubbard",
+            "editorial": "O'Reilly", "categoria": "Tecnología", "codigo_ref": "TEC-007",
+            "codigo_isbn": "978-1449367879", "referencia": "TEC-D4-07", "cantidad": 3,
+            "estado": "MALO", "prestado": "NO", "donado": "NO", "fecha": "2018-11-01",
+            "perdido": "SI",
+        },
+        {
+            "id": 5, "titulo": "Don Quijote de la Mancha", "autor": "Miguel de Cervantes",
+            "editorial": "Alfaguara", "categoria": "Literatura", "codigo_ref": "LIT-002",
+            "codigo_isbn": "978-8420412146", "referencia": "FIC-A1-02", "cantidad": 6,
+            "estado": "DETERIORADO", "prestado": "María López", "donado": "NO",
+            "fecha": "2015-07-22", "perdido": "NO",
+        },
     ]
 
 
@@ -1484,6 +1533,8 @@ class MainWindow(QMainWindow):
         self.sec_data_manager = DataManagerSection(service=self.service)
         for sec in [self.sec_collection, self.sec_add_book, self.sec_data_manager]:
             self.stack.addWidget(sec)
+        # Al guardar un libro -> recargar coleccion y navegar a ella
+        self.sec_add_book.book_saved.connect(self._on_book_saved)
         return self.stack
 
     def _nav_to(self, idx: int):
@@ -1492,6 +1543,10 @@ class MainWindow(QMainWindow):
             btn.setProperty("active", i == idx)
             btn.style().unpolish(btn)
             btn.style().polish(btn)
+
+    def _on_book_saved(self):
+        self.sec_collection._load()
+        self._nav_to(0)
 
     def _on_search(self):
         query = self.search_input.text().strip()

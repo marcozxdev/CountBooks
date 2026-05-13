@@ -29,6 +29,10 @@ class BookService:
         """Retorna todos los libros actualmente prestados."""
         return self.repo.get_books_prestados()
 
+    def get_books_perdidos(self) -> list:
+        """Retorna todos los libros marcados como perdidos."""
+        return self.repo.get_books_perdidos()
+
     def get_books_by_categoria(self, categoria: str) -> list:
         return self.repo.get_books_by_categoria(categoria)
 
@@ -134,6 +138,34 @@ class BookService:
             return False, "Error al registrar la devolución."
         return True, ""
 
+    def marcar_perdido(self, book_id: int) -> tuple[bool, str]:
+        """Marca un libro como perdido."""
+        libro = self.repo.get_book_by_id(book_id)
+        if not libro:
+            return False, f"No existe un libro con ID {book_id}."
+
+        if getattr(libro, "perdido", "NO").upper() == "SI":
+            return False, "El libro ya está marcado como perdido."
+
+        guardado = self.repo.update_perdido(book_id, "SI")
+        if not guardado:
+            return False, "Error al registrar como perdido."
+        return True, ""
+
+    def recuperar_libro(self, book_id: int) -> tuple[bool, str]:
+        """Desmarca un libro como perdido."""
+        libro = self.repo.get_book_by_id(book_id)
+        if not libro:
+            return False, f"No existe un libro con ID {book_id}."
+
+        if getattr(libro, "perdido", "NO").upper() != "SI":
+            return False, "El libro no está marcado como perdido."
+
+        guardado = self.repo.update_perdido(book_id, "NO")
+        if not guardado:
+            return False, "Error al actualizar el registro."
+        return True, ""
+
     # -------------------------
     # Eliminar libros
     # -------------------------
@@ -187,4 +219,9 @@ class BookService:
         book.estado     = book.estado.strip().upper()
         book.prestado   = book.prestado.strip().upper() if book.prestado else "NO"
         book.donado     = book.donado.strip().upper() if book.donado else "NO"
+        book.perdido    = getattr(book, "perdido", "NO")
+        if book.perdido:
+            book.perdido = book.perdido.strip().upper()
+        else:
+            book.perdido = "NO"
         return book

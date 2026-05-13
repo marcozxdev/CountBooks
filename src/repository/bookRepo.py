@@ -11,7 +11,10 @@ class BookRepo:
     # -------------------------
 
     def _fila_a_model(self, fila: tuple) -> BookModel:
-        """Convierte una fila de la DB en un BookModel."""
+        """Convierte una fila de la DB en un BookModel.
+        Orden de columnas: id, titulo, categoria, editorial, codigo_ref,
+        codigo_isbn, referencia, cantidad, estado, autor, prestado, donado, fecha, perdido
+        """
         if fila is None:
             return None
         libro = BookModel(
@@ -27,6 +30,7 @@ class BookRepo:
             prestado    = fila[10],
             donado      = fila[11],
             fecha       = fila[12],
+            perdido     = fila[13] if len(fila) > 13 else "NO",
         )
         libro.id = fila[0]
         return libro
@@ -44,7 +48,7 @@ class BookRepo:
         if quantity:
             self.db.execute("SELECT * FROM libros LIMIT ?", (quantity,))
         else:
-            self.db.execute("SELECT * FROM libros")
+            self.db.execute("SELECT * FROM libros ORDER BY  id DESC")
         return self._filas_a_models(self.db.fetchall())
 
     def get_book_by_id(self, book_id: int) -> BookModel:
@@ -84,6 +88,11 @@ class BookRepo:
         self.db.execute("SELECT * FROM libros WHERE prestado != 'NO' AND prestado != ''")
         return self._filas_a_models(self.db.fetchall())
 
+    def get_books_perdidos(self) -> list:
+        """Retorna todos los libros marcados como perdidos."""
+        self.db.execute("SELECT * FROM libros WHERE perdido = 'SI'")
+        return self._filas_a_models(self.db.fetchall())
+
     def get_books_donados(self) -> list:
         """Retorna todos los libros donados."""
         self.db.execute("SELECT * FROM libros WHERE donado = 'SI'")
@@ -113,14 +122,15 @@ class BookRepo:
         """Inserta un libro en la DB. Retorna True si tuvo éxito."""
         try:
             self.db.execute("""
-                INSERT INTO libros 
+                INSERT INTO libros
                     (titulo, categoria, editorial, codigo_ref, codigo_isbn,
-                     referencia, cantidad, estado, autor, prestado, donado, fecha)
-                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                     referencia, cantidad, estado, autor, prestado, donado, fecha, perdido)
+                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             """, (
                 book.titulo, book.categoria, book.editorial, book.codigo_ref,
                 book.codigo_isbn, book.referencia, book.cantidad, book.estado,
-                book.autor, book.prestado, book.donado, book.fecha
+                book.autor, book.prestado, book.donado, book.fecha,
+                getattr(book, "perdido", "NO"),
             ))
             self.db.commit()
             return True
@@ -136,21 +146,23 @@ class BookRepo:
         """
         try:
             datos = [
-            (b.titulo, b.categoria, b.editorial, b.codigo_ref,
-             b.codigo_isbn, b.referencia, b.cantidad, b.estado,
-             b.autor, b.prestado, b.donado, b.fecha)
-            for b in books
-        ]
+                (b.titulo, b.categoria, b.editorial, b.codigo_ref,
+                 b.codigo_isbn, b.referencia, b.cantidad, b.estado,
+                 b.autor, b.prestado, b.donado, b.fecha,
+                 getattr(b, "perdido", "NO"))
+                for b in books
+            ]
             self.db.cursor.executemany("""
-            INSERT INTO libros 
-            (titulo, categoria, editorial, codigo_ref, codigo_isbn,
-             referencia, cantidad, estado, autor, prestado, donado, fecha)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)
+                INSERT INTO libros
+                    (titulo, categoria, editorial, codigo_ref, codigo_isbn,
+                     referencia, cantidad, estado, autor, prestado, donado, fecha, perdido)
+                VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
             """, datos)
             self.db.commit()
             return len(datos), 0
         except Exception as e:
             self.db.rollback()
+            print(f"[BookRepo] Error en add_books: {e}")
             return 0, len(books)
 
     def update_book(self, book_id: int, new_book: BookModel) -> bool:
@@ -172,14 +184,16 @@ class BookRepo:
                     autor       = ?,
                     prestado    = ?,
                     donado      = ?,
-                    fecha       = ?
+                    fecha       = ?,
+                    perdido     = ?
                 WHERE id = ?
             """, (
                 new_book.titulo, new_book.categoria, new_book.editorial,
                 new_book.codigo_ref, new_book.codigo_isbn, new_book.referencia,
                 new_book.cantidad, new_book.estado, new_book.autor,
                 new_book.prestado, new_book.donado, new_book.fecha,
-                book_id
+                getattr(new_book, "perdido", "NO"),
+                book_id,
             ))
             self.db.commit()
             return True
@@ -200,6 +214,20 @@ class BookRepo:
         except Exception as e:
             self.db.rollback()
             print(f"[BookRepo] Error al actualizar prestado: {e}")
+            return False
+
+    def update_perdido(self, book_id: int, perdido: str) -> bool:
+        """Actualiza solo el campo 'perdido' de un libro."""
+        try:
+            self.db.execute(
+                "UPDATE libros SET perdido = ? WHERE id = ?",
+                (perdido, book_id)
+            )
+            self.db.commit()
+            return True
+        except Exception as e:
+            self.db.rollback()
+            print(f"[BookRepo] Error al actualizar perdido: {e}")
             return False
 
     def delete_book(self, book_id: int) -> bool:

@@ -101,6 +101,26 @@ La aplicación utiliza SQLite y crea automáticamente la base de datos en `~/.bo
 
 ---
 
+## Demo
+
+CountBooks ofrece una interfaz clara para gestionar la colección de libros, registrar préstamos y mantener la información actualizada.
+
+### Cómo se ve
+
+- Pantalla principal con la lista de libros y botones para agregar, editar o eliminar.
+- Formulario de registro de libro con campo de título, autor, categoría, estado y notas.
+- Control de préstamos y devoluciones desde la misma ventana.
+
+### Imágenes de ejemplo
+
+![Demo pantalla principal](docs/demo-main.png)
+
+![Demo agregar libro](docs/demo-add-book.png)
+
+![Demo detalles del libro](docs/demo-book-details.png)
+
+---
+
 ## Contribución
 
 Este proyecto es libre y abierto. Puedes contribuir mejorando la interfaz, agregando funciones o corrigiendo errores.

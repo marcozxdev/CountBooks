@@ -129,6 +129,6 @@ Este proyecto es libre y abierto. Puedes contribuir mejorando la interfaz, agreg
 
 ## Créditos
 
-- Autor principal: `marcoszxdev`
+- Autor principal: `marcozxdev`
 - Contribución: `Jhosepthehacker`
 

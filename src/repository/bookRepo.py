@@ -46,10 +46,27 @@ class BookRepo:
     def get_books(self, quantity: int = None) -> list:
         """Retorna todos los libros, o un límite si se especifica."""
         if quantity:
-            self.db.execute("SELECT * FROM libros LIMIT ?", (quantity,))
+            self.db.execute("SELECT * FROM libros ORDER BY id DESC LIMIT ?", (quantity,))
         else:
-            self.db.execute("SELECT * FROM libros ORDER BY  id DESC")
+            self.db.execute("SELECT * FROM libros ORDER BY id DESC")
         return self._filas_a_models(self.db.fetchall())
+
+    def get_books_paginated(self, offset: int = 0, limit: int = 50) -> list:
+        """Retorna libros en páginas, ordenados descendentemente por ID.
+        offset: cuántos registros saltar
+        limit: cuántos registros retornar
+        """
+        self.db.execute(
+            "SELECT * FROM libros ORDER BY id DESC LIMIT ? OFFSET ?",
+            (limit, offset)
+        )
+        return self._filas_a_models(self.db.fetchall())
+
+    def count_books_newer_than(self, book_id: int) -> int:
+        """Retorna la cantidad de libros con ID mayor al dado."""
+        self.db.execute("SELECT COUNT(*) FROM libros WHERE id > ?", (book_id,))
+        resultado = self.db.fetchone()
+        return resultado[0] if resultado else 0
 
     def get_book_by_id(self, book_id: int) -> BookModel:
         """Retorna un libro por su ID."""
@@ -92,6 +109,18 @@ class BookRepo:
         """Retorna todos los libros marcados como perdidos."""
         self.db.execute("SELECT * FROM libros WHERE perdido = 'SI'")
         return self._filas_a_models(self.db.fetchall())
+
+    def count_books_prestados(self) -> int:
+        """Retorna la cantidad de libros prestados."""
+        self.db.execute("SELECT COUNT(*) FROM libros WHERE prestado != 'NO' AND prestado != ''")
+        resultado = self.db.fetchone()
+        return resultado[0] if resultado else 0
+
+    def count_books_perdidos(self) -> int:
+        """Retorna la cantidad de libros perdidos."""
+        self.db.execute("SELECT COUNT(*) FROM libros WHERE perdido = 'SI'")
+        resultado = self.db.fetchone()
+        return resultado[0] if resultado else 0
 
     def get_books_donados(self) -> list:
         """Retorna todos los libros donados."""

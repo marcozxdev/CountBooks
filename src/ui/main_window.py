@@ -173,6 +173,18 @@ QPushButton#btn_danger {{
 QPushButton#btn_danger:hover {{
     background-color: {C_ERROR_BG};
 }}
+QPushButton#btn_purple {{
+    background-color: {C_PURPLE_700};
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 13px;
+    font-weight: bold;
+}}
+QPushButton#btn_purple:hover {{
+    background-color: #5b1598;
+}}
 QTableWidget {{
     background-color: {C_SURFACE};
     border: 1px solid {C_BORDER};
@@ -675,13 +687,19 @@ COLS = [
     ("Perdido",   "perdido"),
     ("",          None),          # columna de acciones
 ]
+MAX_COLLECTION_LOAD = 300
 
 
 class CollectionSection(QWidget):
     def __init__(self, service=None, parent=None):
         super().__init__(parent)
         self.service = service
-        self.books: list[dict] = []
+        self.loaded_book_ids: list[int] = []
+        self.total_books = 0
+        self.current_page = 0
+        self.page_size = 100  # Carga 100 libros por página
+        self._loading = False
+        self._search_active = False
         self._build()
         self._load()
 
@@ -704,10 +722,16 @@ class CollectionSection(QWidget):
         left_col.addWidget(title)
         left_col.addWidget(self.subtitle)
 
-  
+        self.btn_show_all = QPushButton("Ver catálogo completo")
+        self.btn_show_all.setObjectName("btn_purple")
+        self.btn_show_all.setVisible(False)
+        self.btn_show_all.setFixedHeight(36)
+        self.btn_show_all.setCursor(QCursor(Qt.PointingHandCursor))
+        self.btn_show_all.clicked.connect(self._show_full_collection)
 
         hdr_row.addLayout(left_col)
         hdr_row.addStretch()
+        hdr_row.addWidget(self.btn_show_all)
         root.addLayout(hdr_row)
 
         # Tabla + panel detalle
@@ -822,6 +846,9 @@ class CollectionSection(QWidget):
             self._on_row_selected
         )
 
+        # Scroll dinámico para cargar más libros cuando se acerca al final
+        t.verticalScrollBar().valueChanged.connect(self._on_scroll)
+
         return t
 
 
@@ -853,102 +880,204 @@ class CollectionSection(QWidget):
                 c.widget().deleteLater()
 
     def _load(self):
+        """Carga la primera página de libros."""
         if self.service:
-            raw = self.service.get_books()
-            self.books = [b.a_book() for b in raw] if raw else []
+            self.total_books = self.service.count_books()
+            raw = self.service.get_books_paginated(offset=0, limit=self.page_size)
+            books = [b.a_book() for b in raw] if raw else []
+            self.loaded_book_ids = [b.get("id") for b in books]
         else:
-            self.books = _demo_books()
-        self._fill_table(self.books)
+            books = _demo_books()
+            self.total_books = len(books)
+            self.loaded_book_ids = [b.get("id") for b in books]
+
+        self.current_page = 1
+        self._search_active = False
+        self._fill_table(books)
+    
+    def _load_more(self):
+        """Carga más libros (página siguiente)."""
+        if self._loading or not self.service:
+            return
+        
+        if len(self.loaded_book_ids) >= self.total_books:
+            return  # Ya cargamos todos
+        
+        self._loading = True
+        offset = len(self.loaded_book_ids)
+        raw = self.service.get_books_paginated(offset=offset, limit=self.page_size)
+        
+        if raw:
+            new_books = [b.a_book() for b in raw]
+            self._append_table(new_books)
+            self.loaded_book_ids.extend([b.get("id") for b in new_books])
+            self.current_page += 1
+        
+        self._loading = False
+
+    def _show_full_collection(self):
+        """Vuelve a la vista normal de la colección tras una búsqueda."""
+        self._search_active = False
+        self.loaded_book_ids.clear()
+        self.current_page = 0
+        self._load()
+
+    def _load_until_offset(self, target_offset: int):
+        """Carga páginas hasta que el registro esté incluido en la colección."""
+        if not self.service:
+            return
+
+        while len(self.loaded_book_ids) <= target_offset and len(self.loaded_book_ids) < self.total_books:
+            self._load_more()
+            if self._loading:
+                break
+
+    def _on_scroll(self):
+        """Detecta cuando el usuario llega al final del scroll para cargar más."""
+        if not self.service or self._loading or self._search_active:
+            return
+
+        scrollbar = self.table.verticalScrollBar()
+        if scrollbar.maximum() <= 0:
+            return
+        if scrollbar.value() >= scrollbar.maximum() - scrollbar.pageStep():
+            self._load_more()
 
     def _fill_table(self, books: list):
-    
+        """Limpia la tabla y la llena desde cero (usado en carga inicial)."""
         self.table.setUpdatesEnabled(False)
-    
         self.table.setRowCount(0)
-    
         prestados = 0
         perdidos  = 0
-    
         self.table.setRowCount(len(books))
 
         for row, book in enumerate(books):
-    
             for col, (_, key) in enumerate(COLS):
-            
                 if key is None:
                     btn = QPushButton("EDITAR")
                     btn.setObjectName("btn_ghost")
                     btn.setFixedHeight(24)
                     btn.setCursor(QCursor(Qt.PointingHandCursor))
-    
                     btn.clicked.connect(
-                        lambda _, b=book: self._open_edit(b)
+                        lambda _, book_id=book.get("id"): self._open_edit(book_id)
                     )
-    
                     cell = QWidget()
-    
                     cl = QHBoxLayout(cell)
                     cl.setContentsMargins(4, 2, 4, 2)
-    
                     cl.addWidget(btn)
-    
                     self.table.setCellWidget(row, col, cell)
-    
                 else:
                     val = book.get(key, "")
-    
                     item = QTableWidgetItem(
                         str(val) if val is not None else "—"
                     )
-    
-                    item.setData(Qt.UserRole, book)
-    
+                    if col == 0:
+                        item.setData(Qt.UserRole, book.get("id"))
                     if key == "estado":
                         e = str(val).upper()
-    
                         if e == "BUENO":
                             item.setForeground(QColor(C_GREEN_700))
                             item.setText(f"• {e}")
-    
                         elif e in ("MALO", "DETERIORADO"):
                             item.setForeground(QColor(C_ERROR))
                             item.setText(f"• {e}")
-    
                         else:
                             item.setForeground(QColor(C_WARN))
                             item.setText(f"• {e}")
-    
                     if key == "prestado":
                         if val and str(val).upper() != "NO":
                             item.setBackground(QColor(C_WARN_BG))
                             item.setForeground(QColor(C_WARN))
                             prestados += 1
-    
                     if key == "perdido":
-                    
                         if str(val).upper() == "SI":
                             item.setBackground(QColor(C_PURPLE_50))
                             item.setForeground(QColor(C_PURPLE_700))
                             item.setText("• SI")
                             perdidos += 1
-    
                         else:
                             item.setText("• NO")
                             item.setForeground(QColor(C_TEXT_LIGHT))
-    
                     self.table.setItem(row, col, item)
-    
-        n = len(books)
-    
-        self.subtitle.setText(
-            f"Repositorio Activo: {n:,} volúmenes catalogados"
-        )
-    
-        self.lbl_prestados.setText(str(prestados))
-        self.lbl_perdidos.setText(str(perdidos))
-    
+
+        loaded_count = len(books)
+        if self._search_active:
+            self.subtitle.setText(f"Mostrando {loaded_count} de {self.total_books} resultados — filtro de búsqueda")
+        elif self.service and self.total_books > self.page_size:
+            self.subtitle.setText(f"Mostrando {loaded_count} de {self.total_books} volúmenes (scroll para cargar más)")
+        else:
+            self.subtitle.setText(f"Repositorio Activo: {loaded_count} volúmenes catalogados")
+
+        if hasattr(self, 'btn_show_all'):
+            self.btn_show_all.setVisible(self._search_active)
+
+        total_prestados = self.service.count_books_prestados() if self.service else prestados
+        total_perdidos = self.service.count_books_perdidos() if self.service else perdidos
+        self.lbl_prestados.setText(str(total_prestados))
+        self.lbl_perdidos.setText(str(total_perdidos))
         self.table.setUpdatesEnabled(True)
-    
+
+    def _append_table(self, books: list):
+        """Añade libros al final de la tabla (usado en lazy loading)."""
+        current_rows = self.table.rowCount()
+        self.table.setUpdatesEnabled(False)
+        self.table.setRowCount(current_rows + len(books))
+
+        for row, book in enumerate(books, start=current_rows):
+            for col, (_, key) in enumerate(COLS):
+                if key is None:
+                    btn = QPushButton("EDITAR")
+                    btn.setObjectName("btn_ghost")
+                    btn.setFixedHeight(24)
+                    btn.setCursor(QCursor(Qt.PointingHandCursor))
+                    btn.clicked.connect(
+                        lambda _, book_id=book.get("id"): self._open_edit(book_id)
+                    )
+                    cell = QWidget()
+                    cl = QHBoxLayout(cell)
+                    cl.setContentsMargins(4, 2, 4, 2)
+                    cl.addWidget(btn)
+                    self.table.setCellWidget(row, col, cell)
+                else:
+                    val = book.get(key, "")
+                    item = QTableWidgetItem(
+                        str(val) if val is not None else "—"
+                    )
+                    if col == 0:
+                        item.setData(Qt.UserRole, book.get("id"))
+                    if key == "estado":
+                        e = str(val).upper()
+                        if e == "BUENO":
+                            item.setForeground(QColor(C_GREEN_700))
+                            item.setText(f"• {e}")
+                        elif e in ("MALO", "DETERIORADO"):
+                            item.setForeground(QColor(C_ERROR))
+                            item.setText(f"• {e}")
+                        else:
+                            item.setForeground(QColor(C_WARN))
+                            item.setText(f"• {e}")
+                    if key == "prestado":
+                        if val and str(val).upper() != "NO":
+                            item.setBackground(QColor(C_WARN_BG))
+                            item.setForeground(QColor(C_WARN))
+                    if key == "perdido":
+                        if str(val).upper() == "SI":
+                            item.setBackground(QColor(C_PURPLE_50))
+                            item.setForeground(QColor(C_PURPLE_700))
+                            item.setText("• SI")
+                        else:
+                            item.setText("• NO")
+                            item.setForeground(QColor(C_TEXT_LIGHT))
+                    self.table.setItem(row, col, item)
+
+        loaded_count = self.table.rowCount()
+        if self.service and self.total_books > self.page_size:
+            self.subtitle.setText(f"Mostrando {loaded_count} de {self.total_books} volúmenes (scroll para cargar más)")
+        else:
+            self.subtitle.setText(f"Repositorio Activo: {loaded_count} volúmenes catalogados")
+
+        self.table.setUpdatesEnabled(True)
+
     def _render_detail(self, b: dict):
         self._dp_clear()
 
@@ -1026,10 +1155,24 @@ class CollectionSection(QWidget):
 
     def show_book(self, book: dict):
         self._render_detail(book)
+        target_id = book.get("id")
+        if target_id is None:
+            return
+
+        if target_id not in self.loaded_book_ids:
+            self._search_active = True
+            if self.service:
+                model = self.service.get_book_by_id(target_id)
+                if model:
+                    self._fill_table([model.a_book()])
+                else:
+                    self._fill_table([book])
+            else:
+                self._fill_table([book])
+
         for row in range(self.table.rowCount()):
             item = self.table.item(row, 0)
-            if item and item.data(Qt.UserRole) and \
-               item.data(Qt.UserRole).get("id") == book.get("id"):
+            if item and item.data(Qt.UserRole) == target_id:
                 self.table.selectRow(row)
                 self.table.scrollToItem(item)
                 break
@@ -1038,12 +1181,32 @@ class CollectionSection(QWidget):
         items = self.table.selectedItems()
         if not items:
             return
-        book = items[0].data(Qt.UserRole)
-        if book:
-            self._render_detail(book)
+        book_id = items[0].data(Qt.UserRole)
+        if not book_id:
+            return
+        if self.service:
+            model = self.service.get_book_by_id(book_id)
+            if not model:
+                return
+            book = model.a_book()
+        else:
+            book = next((b for b in _demo_books() if b.get("id") == book_id), None)
+            if not book:
+                return
+        self._render_detail(book)
 
-    def _open_edit(self, book: dict):
-        # Cerrar modal previo si existe
+    def _open_edit(self, book_id: int):
+        if self.service:
+            model = self.service.get_book_by_id(book_id)
+            if model:
+                book = model.a_book()
+            else:
+                return
+        else:
+            book = next((b for b in _demo_books() if b.get("id") == book_id), None)
+            if not book:
+                return
+
         if hasattr(self, "_edit_modal") and self._edit_modal is not None:
             try:
                 self._edit_modal.close()
@@ -1058,6 +1221,7 @@ class CollectionSection(QWidget):
         self._edit_modal = modal
 
     def _on_updated(self, updated: dict):
+        """Actualiza la colección cuando se edita un libro."""
         if self.service:
             try:
                 from src.models.bookModel import BookModel
@@ -1070,18 +1234,7 @@ class CollectionSection(QWidget):
                     }
                 )
 
-                ok, err = self.service.update_book(
-                    updated["id"],
-                    m
-                )
-
-                if not ok:
-                    QMessageBox.critical(
-                        self,
-                        "Error",
-                        err
-                    )
-                    return
+                self.service.update_book(updated["id"], m)
 
             except Exception as e:
                 QMessageBox.critical(
@@ -1091,15 +1244,15 @@ class CollectionSection(QWidget):
                 )
                 return
 
-        for i, b in enumerate(self.books):
-
-            if b.get("id") == updated.get("id"):
-                self.books[i] = updated
-                break
-
-    # self._fill_table(self.books)
-
+        self.refresh_collection()
         self._render_detail(updated)
+    
+    def refresh_collection(self):
+        """Recarga la colección desde cero (útil después de importar datos)."""
+        self.loaded_book_ids.clear()
+        self.current_page = 0
+        self._search_active = False
+        self._load()
 
 
 # ══════════════════════════════════════════════════════════════════════════════
@@ -1309,6 +1462,8 @@ class ImportWorker(QThread):
 
 
 class DataManagerSection(QWidget):
+    data_imported = Signal(dict)
+
     def __init__(self, service=None, parent=None):
         super().__init__(parent)
         self.service = service
@@ -1479,6 +1634,7 @@ class DataManagerSection(QWidget):
             )
             msg += f"\n\nPrimeros errores:\n{errores_str}"
         QMessageBox.information(self, "Importación completada", msg)
+        self.data_imported.emit(result)
 
     def _run_export(self):
         path, _ = QFileDialog.getSaveFileName(
@@ -1649,6 +1805,7 @@ class MainWindow(QMainWindow):
             self.stack.addWidget(sec)
         # Al guardar un libro -> recargar coleccion y navegar a ella
         self.sec_add_book.book_saved.connect(self._on_book_saved)
+        self.sec_data_manager.data_imported.connect(self._on_data_imported)
         return self.stack
 
     def _nav_to(self, idx: int):
@@ -1659,7 +1816,11 @@ class MainWindow(QMainWindow):
             btn.style().polish(btn)
 
     def _on_book_saved(self):
-        self.sec_collection._load()
+        self.sec_collection.refresh_collection()
+        self._nav_to(0)
+
+    def _on_data_imported(self, result: dict):
+        self.sec_collection.refresh_collection()
         self._nav_to(0)
 
     def _on_search(self):

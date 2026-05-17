@@ -15,6 +15,14 @@ class BookService:
         """Retorna todos los libros o un límite."""
         return self.repo.get_books(quantity)
 
+    def get_books_paginated(self, offset: int = 0, limit: int = 50) -> list:
+        """Retorna libros en páginas, ordenados descendentemente por ID."""
+        return self.repo.get_books_paginated(offset, limit)
+
+    def count_books_newer_than(self, book_id: int) -> int:
+        """Retorna la cantidad de libros con ID mayor al dado."""
+        return self.repo.count_books_newer_than(book_id)
+
     def get_book_by_id(self, book_id: int) -> BookModel | None:
         """Retorna un libro por ID, o None si no existe."""
         return self.repo.get_book_by_id(book_id)
@@ -32,6 +40,14 @@ class BookService:
     def get_books_perdidos(self) -> list:
         """Retorna todos los libros marcados como perdidos."""
         return self.repo.get_books_perdidos()
+
+    def count_books_prestados(self) -> int:
+        """Retorna la cantidad de libros prestados."""
+        return self.repo.count_books_prestados()
+
+    def count_books_perdidos(self) -> int:
+        """Retorna la cantidad de libros perdidos."""
+        return self.repo.count_books_perdidos()
 
     def get_books_by_categoria(self, categoria: str) -> list:
         return self.repo.get_books_by_categoria(categoria)

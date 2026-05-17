@@ -1,47 +1,42 @@
-from pathlib import Path # Importamos la librería pathlib
-import sqlite3 #Importamos la librería sqlite3 y la renombramos con "as" para personalizar el nombre a uno más corto y cómodo.
-
-def get_db_path(): # Declaramos una función llamada "get_db_path" para obtener la ruta en dónde nuestra base de datos (DB) se almacenará. 
-    app_dir = Path.home() / ".books" # Declaramos una variable llamada "app_dir" para almacenar el objeto "home" del submódulo "Path".
-    app_dir.mkdir(exist_ok=True) # Accedemos al método mkdir del objeto home para crear directorios.
-    return app_dir / "books.db" # Retornamos la variable app_dir dividida por el string "books.db" que será la BBDD (Base de datos)
+from pathlib import Path
+import sqlite3
 
 
-DB_PATH = get_db_path() # Definimos una variable con nomenclatura de constante llamada "DB_PATH" para guardar el valor de retorno al llamar a la función "get_db_path" y obtener la ruta dónde gestionaremos la ubicación de nuestra BBDD (Base de datos).
+def get_db_path():
+    app_dir = Path.home() / ".books"
+    app_dir.mkdir(exist_ok=True)
+    return app_dir / "books.db"
+
+
+DB_PATH = get_db_path()
+
 
 
 class Database:
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
-        self.conn = sqlite3.connect(self.db_path)
+
+        self.conn = sqlite3.connect(
+            self.db_path,
+            check_same_thread=False
+        )
+
+        self.conn.execute("PRAGMA journal_mode=WAL")
+        self.conn.execute("PRAGMA synchronous=NORMAL")
+        self.conn.execute("PRAGMA temp_store=MEMORY")
+        self.conn.execute("PRAGMA cache_size=-10000")
+
         self.cursor = self.conn.cursor()
 
-    def debug_characters(self, value):
-        FORBIDDEN_CHARACTERS = ("-", ";", "_", "(", ")", "+", "'")
-        self.danger = False
-
-        for i in value:
-            for j in FORBIDDEN_CHARACTERS:
-                if i == j:
-                    self.danger = True
-    
-    # ==========================
-    #     Métodos Básicos
-    # ==========================
+    # -------------------------
+    # Métodos básicos
+    # -------------------------
 
     def execute(self, query, params=None):
         if params is None:
             params = ()
 
-        self.debug_characters(query)
-
-        if self.danger:
-            print("El usuario está ingresando carácteres especiales en el campo.")
-
-            raise ValueError("Protect DB: No se permiten carácteres especiales.") # Se debe manejar la excepción o si no la app colapsará
-        else:
-            self.cursor.execute(query, params)
-
+        self.cursor.execute(query, params)
 
     def fetchone(self):
         return self.cursor.fetchone()
@@ -59,46 +54,71 @@ class Database:
         self.conn.close()
 
 
-# Estructura de la base de datos donde se define sus relaciones y sus camps 
-
+# estructura de la base de datos
 def estructure_db(database: Database):
     cursor = database.cursor
 
-    # Usuarios
+    # -------------------------
+    # Tabla libros
+    # -------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS libros (
         id INTEGER PRIMARY KEY,
         titulo TEXT NOT NULL,
         categoria TEXT,
-        editorial TEXT ,
-        codigo TEXT,
+        editorial TEXT,
+        codigo_ref TEXT,
+        codigo_isbn TEXT,
         referencia TEXT,
         cantidad INTEGER NOT NULL,
         estado TEXT,
         autor TEXT,
         prestado TEXT,
         donado TEXT,
-        fecha TEXT
+        fecha TEXT,
+        perdido TEXT
     )
     """)
 
+    # -------------------------
+    # Índices para búsquedas rápidas
+    # -------------------------
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_titulo
+    ON libros(titulo)
+    """)
+    
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_autor
+    ON libros(autor)
+    """)
+    
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_categoria
+    ON libros(categoria)
+    """)
+    
+    cursor.execute("""
+    CREATE INDEX IF NOT EXISTS idx_isbn
+    ON libros(codigo_isbn)
+    """)
 
     database.commit()
 
 
-# =========================
-# Inicialización Automática
-# =========================
+# -------------------------
+# Inicialización automática
+# -------------------------
+
 def init_db():
     if not DB_PATH.exists():
         DB_PATH.touch()
 
     db = Database(DB_PATH)
     estructure_db(db)
+
     return db
 
 
-# Instancia lista para usar
+# instancia lista para usar
 db = init_db()
-
-# print(get_db_path())

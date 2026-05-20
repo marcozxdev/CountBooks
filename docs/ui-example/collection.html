@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+
+<html class="light" lang="es"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&amp;family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "background": "#faf9f8",
+                    "inverse-surface": "#2f3130",
+                    "surface-variant": "#e3e2e1",
+                    "tertiary-container": "#192f40",
+                    "tertiary": "#031a2a",
+                    "primary": "#03192e",
+                    "inverse-on-surface": "#f1f0f0",
+                    "on-surface": "#1a1c1c",
+                    "surface-container-highest": "#e3e2e1",
+                    "on-secondary": "#ffffff",
+                    "primary-fixed": "#d1e4ff",
+                    "tertiary-fixed": "#cfe5fb",
+                    "primary-container": "#1a2e44",
+                    "on-primary": "#ffffff",
+                    "on-secondary-fixed": "#261900",
+                    "surface-container": "#eeeeed",
+                    "surface": "#faf9f8",
+                    "surface-container-high": "#e9e8e7",
+                    "primary-fixed-dim": "#b4c8e4",
+                    "on-tertiary-container": "#8197ab",
+                    "surface-tint": "#4c6078",
+                    "on-primary-fixed-variant": "#35485f",
+                    "on-secondary-container": "#785a1a",
+                    "on-tertiary": "#ffffff",
+                    "surface-dim": "#dadad9",
+                    "on-secondary-fixed-variant": "#5d4201",
+                    "on-error": "#ffffff",
+                    "error": "#ba1a1a",
+                    "on-tertiary-fixed": "#061d2d",
+                    "on-surface-variant": "#43474d",
+                    "secondary-fixed-dim": "#e9c176",
+                    "surface-container-lowest": "#ffffff",
+                    "outline-variant": "#c4c6cd",
+                    "on-primary-fixed": "#061d32",
+                    "error-container": "#ffdad6",
+                    "surface-container-low": "#f4f3f2",
+                    "outline": "#74777d",
+                    "tertiary-fixed-dim": "#b3c9de",
+                    "on-primary-container": "#8296b0",
+                    "secondary-fixed": "#ffdea5",
+                    "secondary": "#775a19",
+                    "secondary-container": "#fed488",
+                    "inverse-primary": "#b4c8e4",
+                    "on-tertiary-fixed-variant": "#34495b",
+                    "on-error-container": "#93000a",
+                    "on-background": "#1a1c1c",
+                    "surface-bright": "#faf9f8"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.125rem",
+                    "lg": "0.25rem",
+                    "xl": "0.5rem",
+                    "full": "0.75rem"
+            },
+            "spacing": {
+                    "xl": "2.5rem",
+                    "gutter": "1.5rem",
+                    "xs": "0.25rem",
+                    "md": "1rem",
+                    "sm": "0.5rem",
+                    "unit": "4px",
+                    "container-margin": "2rem",
+                    "lg": "1.5rem"
+            },
+            "fontFamily": {
+                    "ui-label-sm": ["Manrope"],
+                    "book-title-md": ["Newsreader"],
+                    "book-title-lg": ["Newsreader"],
+                    "metadata": ["Manrope"],
+                    "display-title": ["Newsreader"],
+                    "ui-label-bold": ["Manrope"],
+                    "ui-header": ["Manrope"],
+                    "ui-body": ["Manrope"]
+            },
+            "fontSize": {
+                    "ui-label-sm": ["0.75rem", {"lineHeight": "1.4", "fontWeight": "500"}],
+                    "book-title-md": ["1.25rem", {"lineHeight": "1.3", "fontWeight": "500"}],
+                    "book-title-lg": ["2rem", {"lineHeight": "1.2", "fontWeight": "500"}],
+                    "metadata": ["0.875rem", {"lineHeight": "1.5", "fontWeight": "400"}],
+                    "display-title": ["3.5rem", {"lineHeight": "1.1", "fontWeight": "600"}],
+                    "ui-label-bold": ["0.8125rem", {"lineHeight": "1.4", "letterSpacing": "0.02em", "fontWeight": "600"}],
+                    "ui-header": ["1.125rem", {"lineHeight": "1.5", "fontWeight": "700"}],
+                    "ui-body": ["0.9375rem", {"lineHeight": "1.6", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .parchment-border { border: 1px solid #E8E4D9; }
+        .ink-border-focus:focus { border-color: #03192e; outline: none; border-width: 2px; }
+        .library-table th { background-color: #03192e; color: #ffdea5; }
+        .table-row-hover:hover { background-color: #f4f3f2; }
+    </style>
+</head>
+<body class="bg-background font-ui-body text-on-background min-h-screen">
+<!-- SideNavBar Shell -->
+<aside class="fixed left-0 top-0 h-full w-64 border-r border-[#E8E4D9] bg-slate-50 flex flex-col py-8 z-50">
+<div class="px-8 mb-12">
+<h1 class="font-serif text-2xl font-bold text-blue-950">CountBooks</h1>
+<p class="text-slate-500 font-serif text-sm italic tracking-tight">Library Inventory</p>
+</div>
+<nav class="flex flex-col space-y-1">
+<!-- Active State: Collection -->
+<a class="text-blue-900 font-bold border-l-4 border-blue-900 pl-4 py-3 font-serif text-lg tracking-tight hover:bg-[#E8E4D9]/30 transition-colors duration-150 ease-in-out" href="#">
+                Collection
+            </a>
+<a class="text-slate-600 pl-5 py-3 font-serif text-lg tracking-tight hover:text-blue-800 hover:bg-[#E8E4D9]/30 transition-colors duration-150 ease-in-out" href="#">
+                Add Book
+            </a>
+<a class="text-slate-600 pl-5 py-3 font-serif text-lg tracking-tight hover:text-blue-800 hover:bg-[#E8E4D9]/30 transition-colors duration-150 ease-in-out" href="#">
+                Data Manager
+            </a>
+
+</nav>
+</aside>
+<!-- TopAppBar Shell -->
+<header class="flex justify-end items-center h-16 ml-64 px-8 w-[calc(100%-16rem)] bg-white border-b border-[#E8E4D9] fixed top-0 z-40">
+<div class="w-72 relative">
+<input class="w-full bg-[#f4f3f2] border border-[#74777d]/30 px-4 py-1.5 font-metadata text-metadata rounded-sm focus:border-primary focus:ring-0 transition-all duration-200" placeholder="Buscar libro..." type="text"/>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-64 pt-24 px-8 pb-12">
+<!-- Header Section -->
+<div class="flex justify-between items-end mb-10">
+<div>
+<h2 class="font-display-title text-display-title text-primary leading-none">Inventario CountBooks</h2>
+<p class="font-book-title-md text-book-title-md text-on-surface-variant mt-2 italic opacity-80">Repositorio Activo: 2.482 volúmenes catalogados</p>
+</div>
+<button class="bg-primary text-on-primary px-6 py-3 font-ui-label-bold text-ui-label-bold uppercase tracking-widest hover:bg-primary-container transition-colors duration-200 shadow-sm">
+                Nuevo Registro
+            </button>
+</div>
+<!-- Table Container -->
+<div class="bg-white parchment-border overflow-hidden">
+<table class="w-full text-left border-collapse library-table">
+<thead>
+<tr class="font-ui-label-bold text-ui-label-bold">
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">ID</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Title</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Category</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Publisher</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Code</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Reference</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Quantity</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Status</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Author</th>
+<th class="px-4 py-4 uppercase tracking-wider border-b border-primary-container">Donated</th>
+</tr>
+</thead>
+<tbody class="font-metadata text-metadata text-on-surface">
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-8021</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">Critique of Pure Reason</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Philosophy</span></td>
+<td class="px-4 py-4">Cambridge Press</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-05213</td>
+<td class="px-4 py-4">SEC-A1-42</td>
+<td class="px-4 py-4">3</td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
+<td class="px-4 py-4">Immanuel Kant</td>
+<td class="px-4 py-4">No</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-9442</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">Elements of Typography</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Design</span></td>
+<td class="px-4 py-4">Hartley &amp; Marks</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-08817</td>
+<td class="px-4 py-4">ART-G5-12</td>
+<td class="px-4 py-4">1</td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
+<td class="px-4 py-4">Robert Bringhurst</td>
+<td class="px-4 py-4">No</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-1120</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">The Great Gatsby</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Literature</span></td>
+<td class="px-4 py-4">Scribner</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-07432</td>
+<td class="px-4 py-4">FIC-C3-02</td>
+<td class="px-4 py-4">12</td>
+<td class="px-4 py-4"><span class="text-green-700 font-bold">• BUENO</span></td>
+<td class="px-4 py-4">F. Scott Fitzgerald</td>
+<td class="px-4 py-4">No</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-3391</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">Structure &amp; Interpretation</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Computing</span></td>
+<td class="px-4 py-4">MIT Press</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-02625</td>
+<td class="px-4 py-4">TEC-M1-88</td>
+<td class="px-4 py-4">5</td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
+<td class="px-4 py-4">Abelson &amp; Sussman</td>
+<td class="px-4 py-4">No</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-5521</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">Principia Mathematica</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Logic</span></td>
+<td class="px-4 py-4">University Press</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-16038</td>
+<td class="px-4 py-4">LOG-R2-09</td>
+<td class="px-4 py-4">2</td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
+<td class="px-4 py-4">Russell &amp; Whitehead</td>
+<td class="px-4 py-4">No</td>
+</tr>
+<tr class="table-row-hover transition-colors border-b border-[#E8E4D9]">
+<td class="px-4 py-4 font-ui-label-bold">CB-6701</td>
+<td class="px-4 py-4 font-book-title-md text-lg italic">Ulysses</td>
+<td class="px-4 py-4"><span class="bg-primary-fixed/30 text-on-primary-fixed px-2 py-0.5 rounded-sm">Literature</span></td>
+<td class="px-4 py-4">Shakespeare and Co</td>
+<td class="px-4 py-4 font-mono text-xs">ISBN-978-18402</td>
+<td class="px-4 py-4">FIC-J2-11</td>
+<td class="px-4 py-4">1</td>
+<td class="px-4 py-4"><span class="text-error font-bold">• MALO</span></td>
+<td class="px-4 py-4">James Joyce</td>
+<td class="px-4 py-4">No</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination -->
+<div class="px-8 py-6 flex items-center justify-between border-t border-[#E8E4D9] bg-surface-container-low">
+<span class="font-metadata text-sm text-on-surface-variant italic">Mostrando 6 de 2.482 registros activos</span>
+<div class="flex space-x-2">
+<button class="px-4 py-2 parchment-border bg-white font-ui-label-bold hover:bg-surface-variant transition-colors disabled:opacity-30" disabled="">Anterior</button>
+<button class="px-4 py-2 bg-primary text-on-primary font-ui-label-bold">1</button>
+<button class="px-4 py-2 parchment-border bg-white font-ui-label-bold hover:bg-surface-variant transition-colors">2</button>
+<button class="px-4 py-2 parchment-border bg-white font-ui-label-bold hover:bg-surface-variant transition-colors">3</button>
+<span class="px-2 self-center">...</span>
+<button class="px-4 py-2 parchment-border bg-white font-ui-label-bold hover:bg-surface-variant transition-colors">414</button>
+<button class="px-4 py-2 parchment-border bg-white font-ui-label-bold hover:bg-surface-variant transition-colors">Siguiente</button>
+</div>
+</div>
+</div>
+<!-- System Stats / Bento Grid Secondary Info -->
+<div class="grid grid-cols-4 gap-6 mt-8">
+
+<div class="parchment-border bg-white p-8">
+<h4 class="font-ui-label-bold text-xs uppercase tracking-widest text-secondary mb-2">Préstamos Activos</h4>
+<p class="font-book-title-lg text-primary leading-none">38</p>
+<p class="text-xs text-on-surface-variant mt-2 italic">Tasa de retorno 94%</p>
+</div>
+
+
+</div>
+</main>
+</body></html>

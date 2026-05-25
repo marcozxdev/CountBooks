@@ -4,13 +4,9 @@ import src.database.database.py as sql
 
 """ Este es el ejecutable de la app """
 
-"""
-
 headers = {}
 
 body = {}
 
-data = request.get("https://example.render")
+data = requests.get("https://example.render")
 data.json()
-
-"""

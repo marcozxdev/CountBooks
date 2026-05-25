@@ -9,4 +9,8 @@ headers = {}
 body = {}
 
 response = requests.get("https://example.render")
-data_json = requests.json()
+
+try:
+    data_json = requests.json()
+except requests.exception.JSONDecodeError:
+    print("¡Ha ocurrido un error en la decodificación de JSON!")

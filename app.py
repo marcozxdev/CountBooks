@@ -5,7 +5,9 @@ import src.database.database.py as sql
 
 """ Este es el ejecutable de la app """
 
-headers = {}
+headers = {
+    Content-Type: "application/json"
+}
 
 body = {}
 

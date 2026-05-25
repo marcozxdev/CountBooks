@@ -8,5 +8,5 @@ headers = {}
 
 body = {}
 
-data = requests.get("https://example.render")
-data.json()
+response = requests.get("https://example.render")
+data_json = requests.json()

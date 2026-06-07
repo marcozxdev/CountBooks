@@ -1,5 +1,5 @@
-from pathlib import Path
-import sqlite3
+from pathlib import Path # Importamos el submódulo u objeto Path de la librería pathlib para navegar por las rutas y ejecutar comandos.
+import sqlite3 # Importamos la librería sqlite3 del motor SQLite3 para diseñar y administrar bases de datos locales.
 
 
 def get_db_path():

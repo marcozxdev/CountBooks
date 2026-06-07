@@ -113,7 +113,7 @@ class BookService:
         }
 
     # -------------------------
-    # Actualizar libros
+    #     Actualizar libros
     # -------------------------
 
     def update_book(self, book_id: int, new_book: BookModel) -> tuple[bool, str]:
@@ -199,7 +199,7 @@ class BookService:
         return True, ""
 
     # -------------------------
-    # Eliminar libros
+    #     Eliminar libros
     # -------------------------
 
     def delete_book(self, book_id: int) -> tuple[bool, str]:

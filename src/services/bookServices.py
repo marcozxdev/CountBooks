@@ -13,7 +13,7 @@ class BookService:
         self.repo = repo
 
     # -------------------------
-    # Consultas
+    #         Consultas
     # -------------------------
 
     def get_books(self, quantity: int = None) -> list:
@@ -68,7 +68,7 @@ class BookService:
         return self.repo.count_books()
 
     # -------------------------
-    # Agregar libros
+    #      Agregar libros
     # -------------------------
 
     def add_book(self, book: BookModel) -> tuple[bool, str]:

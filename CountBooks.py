@@ -3,6 +3,7 @@ from src.ui.main_window import run_app
 from src.services.bookServices import BookService
 from src.repository.bookRepo import BookRepo
 from src.database.database import db
+import requests # Importamos la librería requests para realizar peticiones a serviores y APIs
 
 run_app(service=BookService(BookRepo(db)))
 

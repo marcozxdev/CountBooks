@@ -4,7 +4,12 @@ from src.database.database import Database
 
 
 class BookService:
+    """
+    Clase de servicio encargada de aplicar las reglas de negocio,
+    validaciones y procesamiento de datos antes de interactuar con el repositorio.
+    """
     def __init__(self, repo: BookRepo):
+        # Inyección de dependencias del repositorio de datos
         self.repo = repo
 
     # -------------------------
@@ -29,6 +34,7 @@ class BookService:
 
     def search_books(self, query: str, limit: int = 10) -> list:
         """Busca libros por texto en los campos principales."""
+        # Protección contra búsquedas vacías o con puros espacios
         if not query or not query.strip():
             return []
         return self.repo.search_books(query.strip(), limit)
@@ -50,9 +56,11 @@ class BookService:
         return self.repo.count_books_perdidos()
 
     def get_books_by_categoria(self, categoria: str) -> list:
+        # Recupera colecciones de libros filtrando por su categoría
         return self.repo.get_books_by_categoria(categoria)
 
     def get_books_by_autor(self, autor: str) -> list:
+        # Recupera colecciones de libros filtrando por su autor
         return self.repo.get_books_by_autor(autor)
 
     def count_books(self) -> int:
@@ -68,10 +76,12 @@ class BookService:
         Valida y agrega un libro al inventario.
         Retorna (True, "") si tuvo éxito, o (False, "mensaje de error").
         """
+        # Ejecuta filtros de validación obligatorios
         ok, error = self._validar_libro(book)
         if not ok:
             return False, error
 
+        # Estandariza los textos del modelo
         book = self._normalizar_libro(book)
         guardado = self.repo.add_book(book)
 
@@ -87,11 +97,13 @@ class BookService:
         exitosos = 0
         fallidos = []
 
+        # Itera la lista de libros llevando el conteo del índice para reportar la fila exacta
         for i, libro in enumerate(libros):
             ok, error = self.add_book(libro)
             if ok:
                 exitosos += 1
             else:
+                # Almacena el reporte detallado del fallo en la fila correspondiente
                 fallidos.append({"fila": i + 1, "titulo": libro.titulo, "error": error})
 
         return {
@@ -106,6 +118,7 @@ class BookService:
 
     def update_book(self, book_id: int, new_book: BookModel) -> tuple[bool, str]:
         """Valida y actualiza un libro existente."""
+        # Verifica la existencia previa antes de intentar actualizar
         if not self.repo.get_book_by_id(book_id):
             return False, f"No existe un libro con ID {book_id}."
 
@@ -132,6 +145,7 @@ class BookService:
         if not libro:
             return False, f"No existe un libro con ID {book_id}."
 
+        # Controla que el libro no se encuentre en posesión de alguien más
         if libro.prestado and libro.prestado.upper() != "NO":
             return False, f"El libro ya está prestado a '{libro.prestado}'."
 
@@ -146,6 +160,7 @@ class BookService:
         if not libro:
             return False, f"No existe un libro con ID {book_id}."
 
+        # Valida que realmente esté prestado antes de aceptar una devolución
         if not libro.prestado or libro.prestado.upper() == "NO":
             return False, "El libro no está registrado como prestado."
 
@@ -160,6 +175,7 @@ class BookService:
         if not libro:
             return False, f"No existe un libro con ID {book_id}."
 
+        # Usa getattr previendo si la propiedad no viene inicialmente definida en el objeto
         if getattr(libro, "perdido", "NO").upper() == "SI":
             return False, "El libro ya está marcado como perdido."
 
@@ -220,6 +236,7 @@ class BookService:
         if not isinstance(book.cantidad, int) or book.cantidad < 0:
             return False, "La cantidad debe ser un número entero positivo."
 
+        # Define el conjunto (Set) cerrado de estados aceptados para comparación óptima
         estados_validos = {"BUENO", "MALO", "REGULAR", "DETERIORADO"}
         if book.estado.upper() not in estados_validos:
             return False, f"Estado inválido '{book.estado}'. Opciones: {', '.join(estados_validos)}."
@@ -235,6 +252,8 @@ class BookService:
         book.estado     = book.estado.strip().upper()
         book.prestado   = book.prestado.strip().upper() if book.prestado else "NO"
         book.donado     = book.donado.strip().upper() if book.donado else "NO"
+        
+        # Manejo condicional seguro para el atributo dinámico 'perdido'
         book.perdido    = getattr(book, "perdido", "NO")
         if book.perdido:
             book.perdido = book.perdido.strip().upper()

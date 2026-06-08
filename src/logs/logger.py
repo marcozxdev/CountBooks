@@ -1,10 +1,11 @@
 import logging
-import os
+from pathlib import Path
 
-LOG_DIR = "logs"
-LOG_FILE = os.path.join(LOG_DIR, "countbooks.log")
+APP_DIR  = Path.home() / ".books"
+LOG_DIR  = APP_DIR / "logs"
+LOG_FILE = LOG_DIR / "countbooks.log"
 
-os.makedirs(LOG_DIR, exist_ok=True)
+LOG_DIR.mkdir(parents=True, exist_ok=True)
 
 logging.basicConfig(
     level=logging.INFO,

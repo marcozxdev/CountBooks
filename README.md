@@ -18,7 +18,7 @@ CountBooks es un gestor de inventarios de libros pensado para bibliotecas person
 ### 1. Crear un entorno virtual
 
 > [!WARNING]
-> Debe hacerse desde la carpeta raíz del proyecto `CountBooks`
+> Debe realizarse desde la carpeta raíz del proyecto `CountBooks`
 
 #### Linux / macOS
 ```bash

@@ -932,7 +932,7 @@ class CollectionSection(QWidget):
             if self._loading:
                 break
 
-    def _on_scroll(self):
+    def _on_scroll(self, value: int = 0):
         """Detecta cuando el usuario llega al final del scroll para cargar más."""
         if not self.service or self._loading or self._search_active:
             return

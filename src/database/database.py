@@ -89,7 +89,7 @@ def structure_db(database: Database):
     Crea la tabla 'libros' y sus respectivos índices de búsqueda rápida
     si no existen previamente en la base de datos.
     """
-    cursor = database.cursor
+    cursor = database.cursor()
 
     # -------------------------
     #     Tabla libros

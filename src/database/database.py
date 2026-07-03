@@ -41,7 +41,7 @@ class Database:
         self.cursor = self.conn.cursor()
 
     # -------------------------
-    # Métodos básicos
+    #    Métodos Básicos
     # -------------------------
 
     def execute(self, query, params=None):
@@ -72,7 +72,7 @@ class Database:
         self.conn.close()
 
 
-# estructura de la base de datos
+# Estructura de la base de datos
 def estructure_db(database: Database):
     """
     Crea la tabla 'libros' y sus respectivos índices de búsqueda rápida
@@ -81,7 +81,7 @@ def estructure_db(database: Database):
     cursor = database.cursor
 
     # -------------------------
-    # Tabla libros
+    #     Tabla libros
     # -------------------------
     cursor.execute("""
     CREATE TABLE IF NOT EXISTS libros (
@@ -103,7 +103,7 @@ def estructure_db(database: Database):
     """)
 
     # -------------------------
-    # Índices para búsquedas rápidas
+    # Índices Para Búsquedas Rápidas
     # -------------------------
     cursor.execute("""
     CREATE INDEX IF NOT EXISTS idx_titulo
@@ -130,7 +130,7 @@ def estructure_db(database: Database):
 
 
 # -------------------------
-# Inicialización automática
+# Inicialización Automática
 # -------------------------
 
 def init_db():

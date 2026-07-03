@@ -73,7 +73,7 @@ class Database:
 
 
 # Estructura de la base de datos
-def estructure_db(database: Database):
+def structure_db(database: Database):
     """
     Crea la tabla 'libros' y sus respectivos índices de búsqueda rápida
     si no existen previamente en la base de datos.
@@ -142,7 +142,7 @@ def init_db():
         DB_PATH.touch()
 
     db = Database(DB_PATH)
-    estructure_db(db)
+    structure_db(db)
 
     return db
 

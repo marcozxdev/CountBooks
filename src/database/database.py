@@ -40,7 +40,7 @@ class Database:
         self.cursor.execute(const string instruction)
         """
         
-        # Configuraciones PRAGMA para optimizar el rendimiento de SQLite
+        # Configuraciones PRAGMA para optimizar el rendimiento de SQLite3
         self.conn.execute("PRAGMA journal_mode=WAL") # Registros de escritura por adelantado (concurrencia)
         self.conn.execute("PRAGMA synchronous=NORMAL") # Reduce las sincronizaciones a disco para ganar velocidad
         self.conn.execute("PRAGMA temp_store=MEMORY") # Almacena tablas/índices temporales en la memoria RAM
@@ -58,6 +58,8 @@ class Database:
         if params is None:
             params = ()
 
+        # CVE Detected!: SQL Inyection - CVE
+        
         self.cursor.execute(query, params)
 
     def fetchone(self):
@@ -76,7 +78,7 @@ class Database:
         """Revierte los cambios de la transacción actual en caso de error."""
         self.conn.rollback()
 
-    def close(self):
+    def clear_conn(self):
         """Cierra la conexión con el archivo de la base de datos."""
         self.conn.close()
 

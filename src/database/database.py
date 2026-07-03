@@ -20,7 +20,7 @@ DB_PATH = get_db_path()
 class Database:
     """
     Clase controladora para gestionar la conexión, configuración
-    y operaciones básicas sobre la base de datos SQLite.
+    y operaciones básicas sobre la base de datos SQLite3.
     """
     def __init__(self, db_path=DB_PATH):
         self.db_path = db_path
@@ -31,6 +31,15 @@ class Database:
             check_same_thread=False
         )
 
+        """
+        Posible AttributeError: El objeto conn no tiene el acceso directo al método 'execute()'.
+        Solución: Inicializar el método 'cursor()' para que se inicializen los subsistemas y devuelva un objeto para finalmente acceder al método 'execute()'.
+        Ejemplo:
+        
+        self.cursor = self.conn.cursor()
+        self.cursor.execute(const string instruction)
+        """
+        
         # Configuraciones PRAGMA para optimizar el rendimiento de SQLite
         self.conn.execute("PRAGMA journal_mode=WAL") # Registros de escritura por adelantado (concurrencia)
         self.conn.execute("PRAGMA synchronous=NORMAL") # Reduce las sincronizaciones a disco para ganar velocidad

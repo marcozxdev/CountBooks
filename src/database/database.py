@@ -147,5 +147,5 @@ def init_db():
     return db
 
 
-# instancia lista para usar
+# Instancia lista para usar
 db = init_db()

@@ -1,17 +1,17 @@
 """ Este es el ejecutable de la app """
-from src.ui.main_window import run_app
+from src.ui.main_window import run_app # Importamos el submódulo que posee la UI para proyectar la Interfaz Gráfica a la Main App.
 from src.services.bookServices import BookService
 from src.repository.bookRepo import BookRepo
-from src.database.database import db
-import requests # Importamos la librería requests para realizar peticiones a serviores y APIs
+from src.database.database import db # Importamos el submódulo estructurado de la app para la interacción con el motor SQLite3 y bases de datos.
+import requests # Importamos la librería requests para realizar peticiones a serviores y APIs.
 
 run_app(service=BookService(BookRepo(db)))
 
 
 ########## Contribuido por: ##########
-# - marcozxdev Github:https://github.com/marcozxdev
+# - Marcozxdev Github:https://github.com/marcozxdev
 # - Jhosepthehacker Github:https://github.com/Jhosepthehacker
-# - y herramientas de inteligencia artificial como ChatGPT, Claude y  Github Copilot para el diseño y creación de la UI
+# - Y herramientas de inteligencia artificial como ChatGPT, Claude y  Github Copilot para el diseño y creación de la UI
 
 
 

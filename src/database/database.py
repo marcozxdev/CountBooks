@@ -58,7 +58,7 @@ class Database:
         if params is None:
             params = ()
 
-        # CVE Detected!: SQL Inyection - CVE
+        # CVE Detected!: SQL Inyection - A03:2021-Injection
         
         self.cursor.execute(query, params)
 
